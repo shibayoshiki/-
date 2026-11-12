@@ -15,7 +15,7 @@
 
 /* v0.5.0: ログインIDに応じた表示・画面移動・Teamsテンプレート */
 .session-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
-/* v0.7.1: 控えめな画面下部のナビゲーション */
+/* v0.8.0: 控えめな画面下部のナビゲーション */
 body.has-bottom-navigation{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}
 .navigation{position:fixed;top:auto;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:100;display:flex;align-items:center;justify-content:center;gap:3px;width:max-content;max-width:calc(100% - 24px);margin:0;padding:5px;background:rgba(255,255,255,.94);border:1px solid #dce5ec;border-radius:12px;box-shadow:0 2px 12px rgba(22,46,73,.08);backdrop-filter:blur(10px)}
 .navigation .btn{flex:0 0 auto;max-width:none;min-height:38px;padding:7px 13px;font-size:12px;font-weight:600;line-height:1.3;white-space:nowrap;color:#5c7082;background:transparent;border:1px solid transparent;border-radius:8px}
@@ -38,10 +38,27 @@ body.has-bottom-navigation{padding-bottom:calc(82px + env(safe-area-inset-bottom
 .university-undecided{display:inline-flex!important;align-items:center;gap:6px;white-space:nowrap;border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:var(--blue-pale);margin:0!important;font-size:13px}
 .university-undecided input{width:17px;height:17px;accent-color:var(--blue);margin:0}
 @media(max-width:480px){.university-field-row{align-items:stretch}.university-field-row .control{flex-basis:100%}.university-undecided{width:max-content}}
+
+
+/* v0.8: 生徒側は大分類・中分類なしで直接検索。先生側の詳細分類は維持。 */
+.scroll-checks{max-height:278px;overflow-y:auto;overscroll-behavior:contain;padding:4px 3px 6px;align-content:start;border:1px solid var(--line);border-radius:11px;background:#fafcfe}
+.scroll-checks .check{margin:1px 3px}
+.catalog-count{font-size:12px;color:var(--muted);margin:0 0 7px}
+.catalog-more{border:1px solid var(--line);border-radius:11px;padding:12px 13px;margin:14px 0}
+.catalog-more summary{font-size:13px;font-weight:700;cursor:pointer;color:var(--blue)}
+.catalog-more[open] summary{margin-bottom:8px}
+.other-area{border:1px solid var(--line);border-radius:11px;margin:12px 0;padding:11px;background:#fbfdff}
+.other-area .other-toggle{border:0;background:transparent;min-height:auto;padding:4px 1px}
+.other-area .field{margin:10px 0 2px}
+.teacher-profile-details{margin:12px 0;padding:10px 12px;border:1px solid var(--line);background:#fafcfe;border-radius:10px}
+.teacher-profile-details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--blue)}
+.teacher-profile-details p{margin:8px 0;overflow-wrap:anywhere}
+.teacher-public-fields textarea{resize:vertical}
+@media(max-width:760px){.scroll-checks{grid-template-columns:1fr;max-height:320px}}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap top-inner"><div class="brand">教員マッチングアプリ <span class="muted">（仮）</span><small>目的と専門分野から、相談できる先生を探す</small></div><span class="version">比較試作版 A v0.7.1 / 非AI</span></div></header>
+<header class="top"><div class="wrap top-inner"><div class="brand">教員マッチングアプリ <span class="muted">（仮）</span><small>目的と専門分野から、相談できる先生を探す</small></div><span class="version">比較試作版 A v0.8.0 / 非AI</span></div></header>
 <main class="wrap">
 <div class="alert"><strong>架空データによる動作確認専用です。</strong> ログインIDは画面振り分けのデモで、本人確認や安全なアクセス制御ではありません。ID・分類・相談申込はこのブラウザー内だけの試作データです。別端末との同期や先生への通知は行われません。実在する生徒・教員の個人情報は入力しないでください。</div>
 
@@ -81,16 +98,28 @@ body.has-bottom-navigation{padding-bottom:calc(82px + env(safe-area-inset-bottom
  <div class="field"><label for="university-department">学科</label><div class="university-field-row"><input class="control" id="university-department" maxlength="70" autocomplete="off" placeholder="例：演劇学科"><label class="university-undecided"><input type="checkbox" id="university-department-undecided" checked> 未定</label></div></div>
  <div class="row"><button id="save-university" class="btn" type="button">この内容で次へ</button><span id="university-status" class="status" role="status" aria-live="polite"></span></div>
 </div>
-<div id="student-step-3" class="step hide"><div class="card"><div class="eyebrow" id="step-3-caption">STEP 3 / 3</div><h2>興味分野・目指す職業を選ぶ</h2><p class="subtext">大分類 → 中分類 → 詳細分野から複数選べます。目指す職業は、分野とは別に選択することも併用することもできます。</p><div class="row"><span class="tag" id="purpose-label"></span><button class="btn secondary sm" id="change-purpose" type="button">目的を変更</button><button class="btn muted sm hide" id="change-university" type="button">大学情報を修正</button></div><div id="university-summary" class="small-note hide" style="margin-top:12px"></div><div class="divider"></div><button class="btn" id="open-selector" type="button">＋ 興味のある分野を選ぶ</button>
-<div id="student-selector" class="selector hide"><div class="field"><label for="student-category">① 大分類（学問・分野のジャンル）</label><select id="student-category" class="control"></select></div><div id="student-topic-panel" class="hide"><div class="field"><label for="student-subcategory">② 中分類（専門領域）</label><select id="student-subcategory" class="control"></select></div><div id="student-details" class="hide"><div class="minor-title">③ 興味のある詳細分野（複数選択可）</div><div class="checks" id="student-topic-list"></div></div><div class="divider"></div><div class="minor-title">関連する資格・検定（複数選択可）</div><p class="hint">大分類に関連する資格・検定を表示しています。取得済みである必要はありません。</p><div class="checks" id="student-qualification-list"></div></div><p class="hint">ほかのジャンルにも興味がある場合は、大分類を切り替えて追加してください。</p></div>
+<div id="student-step-3" class="step hide"><div class="card"><div class="eyebrow" id="step-3-caption">STEP 3 / 3</div><h2>興味分野・目指す職業を選ぶ</h2>
+<p class="subtext">分野名から直接選ぶか、目指す職業から探せます。どちらか一方だけでも、両方を組み合わせても検索できます。</p>
+<div class="row"><span class="tag" id="purpose-label"></span><button class="btn secondary sm" id="change-purpose" type="button">目的を変更</button><button class="btn muted sm hide" id="change-university" type="button">大学情報を修正</button></div><div id="university-summary" class="small-note hide" style="margin-top:12px"></div>
 <div class="divider"></div>
-<div class="minor-title">目指している職業から探す <span class="muted" style="font-weight:400;font-size:12px">（分野と併用可・どちらかだけでも可）</span></div>
-<p class="hint">公務員・声優・プログラマーなど、将来の仕事から先生を検索できます。複数選択可能です。</p>
+<div class="minor-title">興味・専門分野から探す</div>
+<p class="hint">学問の大分類・中分類を選ぶ必要はありません。分野名で検索し、当てはまるものを複数選んでください。</p>
+<div class="field"><label for="student-topic-search">専門分野を検索</label><input id="student-topic-search" class="control" type="search" placeholder="例：演技、心理学、公共政策、デザイン" autocomplete="off"></div>
+<div class="catalog-count" id="student-topic-hits" aria-live="polite"></div>
+<div id="student-topic-list" class="checks scroll-checks" aria-label="専門分野一覧"></div>
+<details class="catalog-more"><summary>資格・検定からも探す（任意）</summary><div class="field"><label for="student-qualification-search">資格・検定を検索</label><input id="student-qualification-search" class="control" type="search" placeholder="例：簿記、英検、情報技術"></div><div id="student-qualification-list" class="checks scroll-checks"></div><p class="hint">取得していなくても、相談したい資格・検定を選べます。</p></details>
+<div class="other-area"><label class="check other-toggle"><input id="student-other-topics-toggle" type="checkbox"><span>その他（選択肢にない専門分野を自由記入）</span></label><div id="student-other-topics-wrap" class="hide field"><label for="student-other-topics">専門分野の自由記入</label><textarea id="student-other-topics" class="control" rows="2" maxlength="300" placeholder="例：アニメ音響、地域福祉（複数の場合は改行で区切る）"></textarea></div></div>
+<div class="divider"></div>
+<div class="minor-title">目指している職業から探す <span class="muted" style="font-weight:400;font-size:12px">（分野と併用可）</span></div>
+<p class="hint">職業ジャンルと職業の分野から、目指す仕事を選んでください。複数選択できます。</p>
 <div class="two"><div class="field"><label for="student-career-category">職業ジャンル</label><select id="student-career-category" class="control"></select></div><div class="field"><label for="student-career-subcategory">職業の分野</label><select id="student-career-subcategory" class="control"></select></div></div>
 <div id="student-career-list" class="checks"></div>
+<div class="other-area"><label class="check other-toggle"><input id="student-other-careers-toggle" type="checkbox"><span>その他（選択肢にない職業を自由記入）</span></label><div id="student-other-careers-wrap" class="hide field"><label for="student-other-careers">目指す職業の自由記入</label><textarea id="student-other-careers" class="control" rows="2" maxlength="300" placeholder="例：映像音響エンジニア（複数の場合は改行で区切る）"></textarea></div></div>
+<p class="hint">自由記入は先生の登録情報と一致した場合のみ自動照合します。一致しない内容も申込文に反映できます。</p>
 <div class="minor-title">選択済みの職業 <span id="student-career-count" class="muted">0件</span></div><div id="student-career-selected" class="tagbox"></div>
-<div class="divider"></div><div class="minor-title">選択済みの分野・資格 <span id="student-selection-count" class="muted">0件</span></div><div id="student-selections" class="tagbox"><span class="muted">まだ選択されていません。</span></div><div class="row"><button type="button" class="btn" id="find-teachers">この条件で先生を探す</button><span id="search-status" class="status" role="status"></span></div></div>
-<div id="matches-card" class="card hide"><h2>おすすめの先生</h2><p class="subtext">相談目的・興味分野・職業を照合します。職業への直接対応と関連分野からの候補は区別して表示します。指導力を評価するものではありません。</p><div id="matches"></div><p id="consult-feedback" role="status" aria-live="polite" class="status"></p><div class="small-note">申込文はコピーして学校指定のTeamsで先生に直接送信してください。アプリ内での個別チャット・先生への自動送信はありません。予定は先生との返信で確定します。</div>
+<div class="divider"></div><div class="minor-title">選択済みの分野・資格 <span id="student-selection-count" class="muted">0件</span></div><div id="student-selections" class="tagbox"><span class="muted">まだ選択されていません。</span></div>
+<div class="row"><button type="button" class="btn" id="find-teachers">この条件で先生を探す</button><span id="search-status" class="status" role="status"></span></div></div>
+<div id="matches-card" class="card hide"><h2>おすすめの先生</h2><p class="subtext">相談目的・興味分野・職業を照合します。「その他」は登録済みの分野名・職業名と一致する場合に照合します。先生の公開登録情報も確認できます。推薦順は指導力の評価ではありません。</p><div id="matches"></div><p id="consult-feedback" role="status" aria-live="polite" class="status"></p><div class="small-note">申込文はコピーして学校指定のTeamsで先生に直接送信してください。アプリ内での個別チャット・先生への自動送信はありません。予定は先生との返信で確定します。</div>
 <div class="divider"></div>
 <div id="teams-template-box" class="hide" aria-live="polite">
  <h2>Teamsで送る相談申込文</h2>
@@ -98,17 +127,25 @@ body.has-bottom-navigation{padding-bottom:calc(82px + env(safe-area-inset-bottom
  <label class="field-title" for="teams-template">コピーしてTeamsに貼り付けてください</label>
  <textarea class="control text-template" id="teams-template" rows="13" readonly></textarea>
  <div class="row" style="margin-top:12px"><button type="button" class="btn secondary" id="copy-teams">文面をコピー</button><span class="status" id="copy-status" role="status"></span></div>
- <p class="small-note" style="margin-top:14px"><strong>注意：</strong>送信前に内容を確認し、必要な相談の詳細を追記してください。氏名や学年等は入力済みの架空データを反映します。Teamsへの自動送信は行いません。</p>
+ <p class="small-note" style="margin-top:14px"><strong>注意：</strong>送信前に内容を確認し、必要な相談の詳細を追記してください。氏名や学年等は入力済みの架空データ（自由記入欄を含む）を反映します。Teamsへの自動送信は行いません。</p>
 </div></div>
-<div class="card"><h2>選択肢にない専門分野や資格がある場合</h2><p class="subtext">管理者に追加を申請できます。試作版では管理者画面で承認すると選択肢に反映されます。</p><div class="two"><div class="field"><label for="request-category">追加したい大分類</label><select id="request-category" class="control"></select></div><div class="field"><label for="request-type">項目の種類</label><select id="request-type" class="control"><option value="qualification">資格・検定</option><option value="topic">詳細分野</option><option value="subcategory">中分類</option><option value="category">大分類</option></select></div></div><div id="request-sub-field" class="field hide"><label for="request-subcategory">詳細分野を追加する中分類</label><select id="request-subcategory" class="control"></select></div><div class="field"><label for="request-name">追加したい項目名</label><input id="request-name" class="control" maxlength="70" placeholder="例：舞台音響"></div><div class="row"><button id="request-submit" class="btn secondary" type="button">追加を申請</button><span id="request-status" class="status" role="status"></span></div></div></div>
 </section>
-<section id="teacher" class="screen"><div class="heading"><h1>先生の相談申込・対応分野</h1><p>生徒側と同じ階層分類から、先生が相談に対応できる分野と目的を登録します。</p></div><div class="card"><h2>端末内申込デモの履歴（参考機能）</h2><p class="subtext">生徒画面で申し込んだ内容を、このブラウザー内だけで確認できます。ほかの端末の先生には届きません。本番では教員認証と共有データベースが必要です。</p><div class="field hide" id="inbox-selector-box"><label for="inbox-teacher">申込を確認する先生</label><select class="control" id="inbox-teacher" disabled></select></div><p class="teacher-only" id="teacher-account-label"></p><div class="row"><span class="status" id="inbox-count" aria-live="polite"></span><button type="button" class="btn muted sm" id="refresh-inbox">一覧を更新</button></div><div id="inbox-list"></div></div><div class="teacher-grid"><div><div class="card"><h2>担当分野の登録・更新（架空データ）</h2><p class="subtext">ログイン中の先生の情報を更新します。実在する先生の情報は入力しないでください。</p><div class="field"><label for="teacher-name">表示名</label><input id="teacher-name" class="control" maxlength="40" placeholder="例：経済担当A先生（架空）"></div><div class="field"><div class="field-title">対応できる相談目的</div><div class="checks"><label class="check"><input type="checkbox" value="university" name="teacher-purpose">大学受験</label><label class="check"><input type="checkbox" value="hsjob" name="teacher-purpose">高校卒業後の就職</label><label class="check"><input type="checkbox" value="gradjob" name="teacher-purpose">大学卒業後の就職</label></div></div><div class="field"><label for="teacher-category">大分類</label><select id="teacher-category" class="control"></select></div><div id="teacher-topic-panel" class="hide"><div class="field"><label for="teacher-subcategory">中分類</label><select id="teacher-subcategory" class="control"></select></div><div id="teacher-details" class="hide"><div class="minor-title">対応できる詳細分野</div><div class="checks" id="teacher-topic-list"></div></div><div class="minor-title">対応できる資格・検定</div><div class="checks" id="teacher-qualification-list"></div></div><div class="divider"></div>
+<section id="teacher" class="screen"><div class="heading"><h1>先生の相談申込・対応分野</h1><p>先生は対応分野・相談できる職業・公開可能な専門情報を詳しく登録できます。生徒側では分野名から直接探せます。</p></div><div class="card"><h2>端末内申込デモの履歴（参考機能）</h2><p class="subtext">生徒画面で申し込んだ内容を、このブラウザー内だけで確認できます。ほかの端末の先生には届きません。本番では教員認証と共有データベースが必要です。</p><div class="field hide" id="inbox-selector-box"><label for="inbox-teacher">申込を確認する先生</label><select class="control" id="inbox-teacher" disabled></select></div><p class="teacher-only" id="teacher-account-label"></p><div class="row"><span class="status" id="inbox-count" aria-live="polite"></span><button type="button" class="btn muted sm" id="refresh-inbox">一覧を更新</button></div><div id="inbox-list"></div></div><div class="teacher-grid"><div><div class="card"><h2>担当分野の登録・更新（架空データ）</h2><p class="subtext">ログイン中の先生の情報を更新します。実在する先生の情報は入力しないでください。</p><div class="field"><label for="teacher-name">表示名</label><input id="teacher-name" class="control" maxlength="40" placeholder="例：経済担当A先生（架空）"></div><div class="field"><div class="field-title">対応できる相談目的</div><div class="checks"><label class="check"><input type="checkbox" value="university" name="teacher-purpose">大学受験</label><label class="check"><input type="checkbox" value="hsjob" name="teacher-purpose">高校卒業後の就職</label><label class="check"><input type="checkbox" value="gradjob" name="teacher-purpose">大学卒業後の就職</label></div></div><div class="field"><label for="teacher-category">大分類</label><select id="teacher-category" class="control"></select></div><div id="teacher-topic-panel" class="hide"><div class="field"><label for="teacher-subcategory">中分類</label><select id="teacher-subcategory" class="control"></select></div><div id="teacher-details" class="hide"><div class="minor-title">対応できる詳細分野</div><div class="checks" id="teacher-topic-list"></div></div><div class="minor-title">対応できる資格・検定</div><div class="checks" id="teacher-qualification-list"></div></div><div class="divider"></div>
 <div class="minor-title">相談に対応できる職業</div>
 <p class="hint">専門分野に加えて、具体的な職業の相談にも対応できる場合に選択してください（任意・複数可）。</p>
 <div class="two"><div class="field"><label for="teacher-career-category">職業ジャンル</label><select id="teacher-career-category" class="control"></select></div><div class="field"><label for="teacher-career-subcategory">職業の分野</label><select id="teacher-career-subcategory" class="control"></select></div></div>
 <div id="teacher-career-list" class="checks"></div>
 <div class="minor-title">対応できる職業</div><div id="teacher-career-selected" class="tagbox"></div>
-<div class="minor-title">選択済みの専門分野</div><div class="tagbox" id="teacher-selections"><span class="muted">まだ選択されていません。</span></div><div class="field"><label for="teacher-note">紹介文（任意）</label><textarea id="teacher-note" class="control" rows="3" maxlength="180" placeholder="相談できる内容の補足など"></textarea></div><div class="row"><button class="btn" id="teacher-save" type="button">担当分野を保存する</button><span class="status" role="status" id="teacher-status"></span></div></div></div><div><div class="card" id="teacher-catalog-card">
+<div class="minor-title">選択済みの専門分野</div><div class="tagbox" id="teacher-selections"><span class="muted">まだ選択されていません。</span></div>
+<div class="teacher-public-fields"><div class="minor-title">生徒に公開する詳細情報</div>
+<p class="hint">登録した内容は、マッチした生徒の先生紹介画面に表示されます。連絡先や非公開情報、個人情報は入力しないでください。</p>
+<div class="field"><label for="teacher-extra-topics">選択肢以外の専門分野（1行に1つ、最大16件）</label><textarea id="teacher-extra-topics" class="control" rows="3" maxlength="400" placeholder="例：アニメ音響
+地域福祉"></textarea></div>
+<div class="field"><label for="teacher-extra-careers">上の選択肢にない相談可能な職業（1行に1つ）</label><textarea id="teacher-extra-careers" class="control" rows="2" maxlength="400" placeholder="例：映像音響エンジニア"></textarea></div>
+<div class="field"><label for="teacher-strong-topics">特に相談に乗れるテーマ（任意）</label><textarea id="teacher-strong-topics" class="control" rows="3" maxlength="400" placeholder="例：演劇系大学の学び、発声や舞台制作など"></textarea></div>
+<div class="field"><label for="teacher-consult-areas">具体的に相談できること（任意）</label><textarea id="teacher-consult-areas" class="control" rows="3" maxlength="400" placeholder="例：学部の違い、卒業後の進路、必要な資格など"></textarea></div>
+<div class="field"><label for="teacher-public-experience">公開できる経験・資格等（任意）</label><textarea id="teacher-public-experience" class="control" rows="3" maxlength="400" placeholder="例：学校で指導してきた分野や公開可能な経験"></textarea></div></div>
+<div class="field"><label for="teacher-note">紹介文（任意）</label><textarea id="teacher-note" class="control" rows="3" maxlength="180" placeholder="相談できる内容の補足など"></textarea></div><div class="row"><button class="btn" id="teacher-save" type="button">担当分野を保存する</button><span class="status" role="status" id="teacher-status"></span></div></div></div><div><div class="card" id="teacher-catalog-card">
  <h2>専門分野・資格を新しく追加する</h2>
  <p class="subtext">先生は申請・承認なしで追加できます。追加した項目は、この試作データ内で他の先生・生徒にもすぐ表示されます。追加された項目を担当分野として使う場合は、上の選択欄から選び「担当分野を保存する」を押してください。</p>
  <div class="field"><label for="teacher-add-type">追加する項目</label><select id="teacher-add-type" class="control"><option value="category">大分類</option><option value="subcategory">中分類</option><option value="topic">詳細分野</option><option value="qualification">資格・検定</option></select></div>
@@ -123,8 +160,8 @@ body.has-bottom-navigation{padding-bottom:calc(82px + env(safe-area-inset-bottom
  <div class="row"><button id="teacher-delete-submit" type="button" class="btn secondary">削除を申請する</button><span class="status" id="teacher-delete-status" role="status"></span></div>
  <div id="teacher-pending-deletions" class="hint"></div>
  </div><div class="card"><h2>現在ログイン中の先生</h2><p class="subtext">登録した対応分野を確認できます。</p><div id="teacher-list"></div></div></div></div></section>
-<section id="admin" class="screen"><div class="heading"><h1>分類・資格・検定の管理</h1><p>コードを編集せずに大分類・中分類・詳細分野・資格を追加できます。</p></div><div class="stats" id="stats"></div><div class="admin-layout"><div><div class="card"><h2>項目を追加する</h2><p class="subtext">複数追加したい場合は、項目名を1行に1つずつ入力してください。</p><div class="field"><label for="admin-type">追加する階層</label><select id="admin-type" class="control"><option value="category">大分類</option><option value="subcategory">中分類</option><option value="topic">詳細分野</option><option value="qualification">資格・検定</option></select></div><div id="admin-group-field" class="field hide"><label for="admin-category">追加先の大分類</label><select id="admin-category" class="control"></select></div><div id="admin-sub-field" class="field hide"><label for="admin-subcategory">追加先の中分類</label><select id="admin-subcategory" class="control"></select></div><div class="field"><label for="admin-names">追加したい項目名（改行区切り可）</label><textarea id="admin-names" class="control" rows="5" placeholder="例：\n労働経済学\n国際経済学"></textarea></div><div class="row"><button id="admin-add" type="button" class="btn">項目を登録</button><span id="admin-status" role="status" class="status"></span></div><div class="divider"></div><h2>生徒からの追加申請</h2><div id="requests"></div><div class="divider"></div><h2>先生からの削除申請</h2><div id="delete-requests"></div></div></div><div><div class="card"><h2>登録されている分類</h2><div class="field"><label for="admin-preview">大分類を表示</label><select id="admin-preview" class="control"></select></div><div id="catalog-preview"></div></div><div class="card"><h2>生徒IDの発行（デモ）</h2><p class="subtext">生徒を区別するための重複しないIDを発行します。個人アカウントの作成や本人認証ではありません。番号は発行済みのものを再利用しません（このブラウザー内に限ります）。</p><label class="field-title" for="student-id-count">発行する人数</label><select id="student-id-count" class="control"><option value="1">1人</option><option value="5">5人</option><option value="10">10人</option></select><p><button id="admin-create-students" class="btn secondary" type="button">生徒IDを発行する</button></p><p id="student-id-result" class="status" aria-live="polite"></p><div id="admin-student-ids" class="hint"></div></div><div class="card"><h2>先生IDの発行（デモ）</h2><p class="subtext">試作版のため、架空の先生だけを追加してください。</p><label class="field-title" for="new-teacher-name">新しい先生の表示名</label><input id="new-teacher-name" class="control" maxlength="40" placeholder="例：新任G先生（架空）"><p><button class="btn secondary" id="admin-create-teacher" type="button">先生IDを発行</button></p><p class="status" id="admin-account-status"></p><div id="admin-teacher-ids" class="hint"></div></div><div class="card"><h2>データと安全性について</h2><p class="subtext">この画面はデモのため、誰でも管理できます。実運用では学校管理者への権限制限、ユーザー認証、学校単位のデータ分離、通信・保存データの保護、監査が必要です。</p><button id="reset" type="button" class="btn danger sm">デモの分類・先生・申込を初期化</button></div></div></div></section>
-</main><footer class="footer">教員マッチングアプリ（仮） / 比較試作版 A v0.7.1 — 非AI・ブラウザー内で動作するデモ</footer>
+<section id="admin" class="screen"><div class="heading"><h1>分類・資格・検定の管理</h1><p>コードを編集せずに大分類・中分類・詳細分野・資格を追加できます。</p></div><div class="stats" id="stats"></div><div class="admin-layout"><div><div class="card"><h2>項目を追加する</h2><p class="subtext">複数追加したい場合は、項目名を1行に1つずつ入力してください。</p><div class="field"><label for="admin-type">追加する階層</label><select id="admin-type" class="control"><option value="category">大分類</option><option value="subcategory">中分類</option><option value="topic">詳細分野</option><option value="qualification">資格・検定</option></select></div><div id="admin-group-field" class="field hide"><label for="admin-category">追加先の大分類</label><select id="admin-category" class="control"></select></div><div id="admin-sub-field" class="field hide"><label for="admin-subcategory">追加先の中分類</label><select id="admin-subcategory" class="control"></select></div><div class="field"><label for="admin-names">追加したい項目名（改行区切り可）</label><textarea id="admin-names" class="control" rows="5" placeholder="例：\n労働経済学\n国際経済学"></textarea></div><div class="row"><button id="admin-add" type="button" class="btn">項目を登録</button><span id="admin-status" role="status" class="status"></span></div><div class="divider"></div><h2>先生からの削除申請</h2><div id="delete-requests"></div></div></div><div><div class="card"><h2>登録されている分類</h2><div class="field"><label for="admin-preview">大分類を表示</label><select id="admin-preview" class="control"></select></div><div id="catalog-preview"></div></div><div class="card"><h2>生徒IDの発行（デモ）</h2><p class="subtext">生徒を区別するための重複しないIDを発行します。個人アカウントの作成や本人認証ではありません。番号は発行済みのものを再利用しません（このブラウザー内に限ります）。</p><label class="field-title" for="student-id-count">発行する人数</label><select id="student-id-count" class="control"><option value="1">1人</option><option value="5">5人</option><option value="10">10人</option></select><p><button id="admin-create-students" class="btn secondary" type="button">生徒IDを発行する</button></p><p id="student-id-result" class="status" aria-live="polite"></p><div id="admin-student-ids" class="hint"></div></div><div class="card"><h2>先生IDの発行（デモ）</h2><p class="subtext">試作版のため、架空の先生だけを追加してください。</p><label class="field-title" for="new-teacher-name">新しい先生の表示名</label><input id="new-teacher-name" class="control" maxlength="40" placeholder="例：新任G先生（架空）"><p><button class="btn secondary" id="admin-create-teacher" type="button">先生IDを発行</button></p><p class="status" id="admin-account-status"></p><div id="admin-teacher-ids" class="hint"></div></div><div class="card"><h2>データと安全性について</h2><p class="subtext">この画面はデモのため、誰でも管理できます。実運用では学校管理者への権限制限、ユーザー認証、学校単位のデータ分離、通信・保存データの保護、監査が必要です。</p><button id="reset" type="button" class="btn danger sm">デモの分類・先生・申込を初期化</button></div></div></div></section>
+</main><footer class="footer">教員マッチングアプリ（仮） / 比較試作版 A v0.8.0 — 非AI・ブラウザー内で動作するデモ</footer>
 <script>
 'use strict';
 // 大分類 → 中分類 → 詳細分野 ＋ その大分類に関連する資格・検定。
@@ -139,6 +176,36 @@ const SEED_CATALOG={
  '法・政治':{sub:{'法律学':['民法','刑法','憲法','商法'],'政治・行政':['政治学','行政学','国際関係論']},quals:['行政書士','司法書士','宅地建物取引士']},
  '医療・福祉':{sub:{'医療・健康':['医学','看護学','公衆衛生学'],'社会福祉':['社会福祉学','介護福祉学','福祉政策']},quals:['看護師','社会福祉士','介護福祉士']}
 };
+
+// v0.8：先生の登録用の階層は維持し、生徒には分野名をフラットに表示する。
+// 新規登録データの不足を補うサンプル項目（正式な学問分類ではありません）。
+const EXTRA_SEED_TOPICS = {
+ '文学':{'文学研究':['児童文学','文学批評','出版文化'],'言語・文化':['英語学','中国語学','韓国語学','異文化コミュニケーション','日本語教育','通訳','日本文化','歴史学','哲学','倫理学']},
+ '経営':{'経営理論':['起業','商品企画','事業開発','ブランド戦略','広告','広報','プロジェクトマネジメント','観光経営'],'会計・ファイナンス':['税務','金融商品','投資・資産運用','リスク管理']},
+ '芸術':{'舞台・演劇':['脚本','演劇教育','朗読','ナレーション','アニメーション演技','舞台音響','舞台照明','ミュージカル','ダンス','振付'],'音楽':['声楽','ドラム','吹奏楽','DTM','レコーディング','音楽ビジネス'],'映像・美術':['写真','アニメーション制作','ゲームデザイン','グラフィックデザイン','UXデザイン','美術教育','映像編集']},
+ '経済':{'応用経済':['地域経済','環境経済学','行動経済学','社会保障','財政学'],'実証・分析手法':['アンケート調査','ビッグデータ分析']},
+ '理工':{'情報・計算':['Webアプリ開発','ネットワーク','機械学習','情報デザイン','クラウド'],'数理・物理':['化学','生物学','地学','気象学','宇宙科学','統計学'],'工学':['都市計画','土木工学','ロボット工学','環境工学','材料工学']},
+ '教育':{'教育実践':['進路指導','学校経営','幼児教育','ICT教育','探究学習','部活動指導'],'教育理論':['発達心理学','学習心理学','カウンセリング']},
+ '法・政治':{'法律学':['労働法','知的財産法','国際法','消費者法'],'政治・行政':['地方自治','公共政策','公務員試験','国際政治','外交','防災政策']},
+ '医療・福祉':{'医療・健康':['薬学','栄養学','理学療法','作業療法','心理支援','スポーツ医学'],'社会福祉':['児童福祉','高齢者福祉','障害者福祉','地域福祉']},
+ '観光・サービス':{'観光・宿泊':['観光学','旅行企画','ホテル運営','地域観光'],'接客・生活':['接客サービス','調理','製菓','美容','ファッション']},
+ '交通・インフラ':{'交通・物流':['鉄道','航空','海運','物流','自動車整備'],'基盤・環境':['エネルギー','電力','水道','環境保全','防災']},
+ '農業・食':{'生物・生産':['農学','園芸','水産学','食品科学','畜産'],'食・流通':['食品衛生','食品開発','食育','農業経営']},
+ 'スポーツ':{'競技・指導':['スポーツ指導','スポーツ心理','運動生理学','スポーツマネジメント','リハビリテーション']},
+ '国際・社会':{'国際':['国際協力','国際開発','多文化共生','海外留学'],'社会':['社会学','社会調査','ジェンダー研究','地域づくり','メディア研究','ジャーナリズム']}
+};
+function migrateCatalogV08(){
+ if(db.catalogMigrationV08)return;
+ for(const [group, subsByName] of Object.entries(EXTRA_SEED_TOPICS)){
+  if(!Object.prototype.hasOwnProperty.call(db.catalog,group))db.catalog[group]={sub:{},quals:[]};
+  for(const [sub,topics] of Object.entries(subsByName)){
+   if(!Object.prototype.hasOwnProperty.call(db.catalog[group].sub,sub))db.catalog[group].sub[sub]=[];
+   for(const topic of topics)if(!db.catalog[group].sub[sub].includes(topic))db.catalog[group].sub[sub].push(topic);
+  }
+ }
+ db.catalogMigrationV08=true;
+}
+
 const SEED_TEACHERS=[
  {id:'demo-a',name:'経済担当A先生（架空）',purposes:['university'],keys:['topic|経済|基礎理論|ミクロ経済学','topic|経済|基礎理論|マクロ経済学','topic|経済|基礎理論|ゲーム理論'],note:'経済分野の大学受験・学びに関する相談に対応。'},
  {id:'demo-b',name:'統計担当B先生（架空）',purposes:['university','gradjob'],keys:['topic|経済|実証・分析手法|計量経済学','topic|経済|実証・分析手法|統計分析','qual|経済|統計検定2級','topic|理工|情報・計算|データサイエンス'],note:'統計・データ分析分野の相談に対応。'},
@@ -315,6 +382,51 @@ const CAREER_RELATED_KEYS = {
   "topic|文学|文学研究|文芸創作"
  ]
 };
+
+// v0.8：学校内で候補を検証するための例示職業。教員が対応を登録したものだけ直接一致とする。
+const EXTRA_CAREER_CATALOG={
+ '公務員・公共':{'行政・公共政策':['国家公務員（技術職）','地方公務員（技術職）','外交官','国税専門官','裁判所職員','自治体職員'],'公安・防災':['自衛官','海上保安官','救急救命士','防災職員']},
+ '教育・保育':{'教育・保育':['幼稚園教諭','大学教員','スクールカウンセラー','塾講師','教育行政職員']},
+ '芸術・エンタメ':{'舞台・音声':['ナレーター','脚本家','舞台照明技術者','舞台音響技術者','ダンサー','振付師'],'音楽・映像':['アニメーター','映画監督','映像編集者','ゲームクリエイター','作曲家','音響エンジニア','イラストレーター','美術家','写真家','イベント制作スタッフ']},
+ 'ビジネス・金融':{'経営・企画':['営業職','商品企画職','広告・広報職','人事職','経営コンサルタント','起業家'],'会計・金融':['銀行員','ファイナンシャルプランナー','経理職','保険業務担当者']},
+ 'IT・理工':{'情報技術':['Webエンジニア','AIエンジニア','システムエンジニア','UXデザイナー','ネットワークエンジニア'],'ものづくり':['電気電子エンジニア','ロボットエンジニア','土木技術者','都市計画技術者','研究開発職']},
+ '医療・福祉':{'医療':['薬剤師','理学療法士','作業療法士','臨床検査技師','管理栄養士','歯科医師'],'福祉':['介護福祉士','精神保健福祉士','児童福祉職','心理職']},
+ '文学・言語':{'言語・出版':['通訳者','ライター','日本語教師','校正者','図書館司書']},
+ '観光・ホテル・サービス':{'観光・宿泊':['ホテルスタッフ','旅行企画職','観光ガイド','航空客室乗務員','グランドスタッフ'],'飲食・サービス':['調理師','パティシエ','ブライダルプランナー','美容師','販売職']},
+ '交通・物流・インフラ':{'交通・運輸':['鉄道運転士','航空操縦士','航空整備士','物流管理職','自動車整備士'],'社会基盤':['電力技術者','建設技術者','環境コンサルタント']},
+ '農業・食品':{'食・農':['農業従事者','食品開発職','水産技術者','栄養士','農業研究者']},
+ 'スポーツ・健康':{'指導・競技':['スポーツトレーナー','スポーツ指導者','プロスポーツ選手','体育教員','スポーツビジネス職']},
+ '研究・学術':{'自然科学':['化学研究者','生物研究者','物理学研究者','気象研究者'],'社会科学':['社会調査員','政策研究者','大学研究者']},
+ '国際・地域':{'国際・外交':['国際協力職員','国際機関職員','海外営業職'],'地域・社会':['NPO職員','地域コーディネーター','自治体まちづくり担当']},
+ 'メディア・出版':{'報道・制作':['記者','アナウンサー','編集者（出版）','Webメディア運営者','番組ディレクター']}
+};
+for(const [genre,groups]of Object.entries(EXTRA_CAREER_CATALOG)){
+ if(!CAREER_CATALOG[genre])CAREER_CATALOG[genre]={};
+ for(const [sub,items]of Object.entries(groups)){
+  if(!CAREER_CATALOG[genre][sub])CAREER_CATALOG[genre][sub]=[];
+  for(const item of items)if(!CAREER_CATALOG[genre][sub].includes(item))CAREER_CATALOG[genre][sub].push(item);
+ }
+}
+// 既存教員の専門分野との関連候補を示せる範囲だけ明示的に対応付ける。
+Object.assign(CAREER_RELATED_KEYS,{
+ '外交官':['topic|法・政治|政治・行政|国際関係論'],'国税専門官':['topic|経営|会計・ファイナンス|財務会計'],
+ '裁判所職員':['topic|法・政治|法律学|民法'], 'ナレーター':['topic|芸術|舞台・演劇|声優・ナレーション'],
+ '脚本家':['topic|芸術|舞台・演劇|脚本'], '舞台音響技術者':['topic|芸術|舞台・演劇|舞台音響'],
+ '音響エンジニア':['topic|芸術|音楽|音響'],'アニメーター':['topic|芸術|映像・美術|アニメーション制作'],
+ '映像編集者':['topic|芸術|映像・美術|映像編集'], '作曲家':['topic|芸術|音楽|作曲'],
+ '営業職':['topic|経営|経営理論|マーケティング'], '起業家':['topic|経営|経営理論|起業'],
+ '銀行員':['topic|経済|応用経済|金融論'], '経理職':['topic|経営|会計・ファイナンス|財務会計'],
+ 'AIエンジニア':['topic|理工|情報・計算|人工知能'], 'Webエンジニア':['topic|理工|情報・計算|Webアプリ開発'],
+ 'システムエンジニア':['topic|理工|情報・計算|プログラミング'], '大学教員':['topic|教育|教育理論|教育方法論'],
+ '介護福祉士':['topic|医療・福祉|社会福祉|介護福祉学'], '理学療法士':['topic|医療・福祉|医療・健康|理学療法'],
+ '学校教員':['topic|教育|教育実践|教育方法論'], 'スクールカウンセラー':['topic|教育|教育理論|カウンセリング'],
+ '管理栄養士':['topic|医療・福祉|医療・健康|栄養学'], '編集者（出版）':['topic|文学|文学研究|文芸創作'],
+ '記者':['topic|国際・社会|社会|ジャーナリズム'], '社会調査員':['topic|国際・社会|社会|社会調査'],
+ '地域コーディネーター':['topic|国際・社会|社会|地域づくり'],
+ 'スポーツトレーナー':['topic|スポーツ|競技・指導|スポーツ指導'],
+ 'ホテルスタッフ':['topic|観光・サービス|観光・宿泊|ホテル運営']
+});
+
 const SEED_TEACHER_CAREERS = {"demo-a": ["国家公務員（行政職）"], "demo-b": ["データサイエンティスト"], "demo-c": ["公認会計士", "税理士"], "demo-d": ["声優", "俳優", "舞台演出家"], "demo-e": ["プログラマー", "情報セキュリティ技術者"], "demo-f": ["編集者"]};
 const ALL_CAREERS = new Set(Object.values(CAREER_CATALOG).flatMap(groups=>Object.values(groups).flat()));
 function normalizeCareerData(){
@@ -337,25 +449,31 @@ function careerSelectOptions(who){
  }
 }
 function renderCareerSelections(who){
- const selected=who==='student'?student.careers:teacherCareers;
+ const chosen=who==='student'?student.careers:teacherCareers;
  const host=$(who+'-career-selected');host.replaceChildren();
- if(who==='student')$('student-career-count').textContent=selected.size+'件';
- if(!selected.size){host.append(make('span','未選択（分野だけでも検索できます）','muted'));return}
- for(const name of selected){
+ const extras=who==='student'?extraItems(student.otherCareers):[];
+ if(who==='student')$('student-career-count').textContent=(chosen.size+extras.length)+'件';
+ if(!chosen.size&&!extras.length){host.append(make('span','未選択（分野だけでも検索できます）','muted'));return}
+ for(const name of chosen){
   const chip=make('span',undefined,'tag');chip.append(make('span',name));
   const remove=make('button','×');remove.type='button';remove.setAttribute('aria-label',name+'を削除');
-  remove.addEventListener('click',()=>{selected.delete(name);renderCareerSelections(who);careerSelectOptions(who);if(who==='student'){saveStudentProfile();show('matches-card',false)}});
+  remove.addEventListener('click',()=>{chosen.delete(name);renderCareerSelections(who);careerSelectOptions(who);if(who==='student'){saveStudentProfile();show('matches-card',false)}});
   chip.append(remove);host.append(chip);
  }
+ for(const name of extras)host.append(make('span','その他：'+name,'tag'));
 }
 function findTeacherRecommendations(){
- const chosen=[...student.keys], careers=[...student.careers];
+ const chosen=[...student.keys], careers=[...student.careers],otherTopics=extraItems(student.otherTopics),otherCareers=extraItems(student.otherCareers);
  return db.teachers.filter(t=>t.purposes.includes(student.purpose)).map(t=>{
   const exact=chosen.filter(k=>t.keys.includes(k));
-  const directCareers=careers.filter(c=>t.careers.includes(c));
-  const relatedCareers=careers.filter(c=>!directCareers.includes(c)&& (CAREER_RELATED_KEYS[c]||[]).some(k=>t.keys.includes(k)));
-  const score=directCareers.length*8+exact.length*3+relatedCareers.length;
-  return{t,exact,directCareers,relatedCareers,score};
+  const directCareers=careers.filter(c=>(t.careers||[]).includes(c));
+  const relatedCareers=careers.filter(c=>!directCareers.includes(c)&&(CAREER_RELATED_KEYS[c]||[]).some(k=>t.keys.includes(k)));
+  const topicNames=t.keys.map(k=>parseKey(k).label).concat(extraItems(t.extraTopics));
+  const careerNames=(t.careers||[]).concat(extraItems(t.extraCareers));
+  const freeTopicMatches=otherTopics.filter(x=>topicNames.some(y=>norm(y)===norm(x)));
+  const freeCareerMatches=otherCareers.filter(x=>careerNames.some(y=>norm(y)===norm(x)));
+  const score=directCareers.length*8+exact.length*3+relatedCareers.length+freeTopicMatches.length*3+freeCareerMatches.length*8;
+  return{t,exact,directCareers,relatedCareers,freeTopicMatches,freeCareerMatches,score};
  }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score||a.t.name.localeCompare(b.t.name,'ja'));
 }
 
@@ -372,13 +490,14 @@ const clean=s=>String(s||'').trim().replace(/\s+/g,' ').slice(0,70);
 const objHas=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&v.catalog&&v.teachers&&Array.isArray(v.requests))return v}catch(e){}return{catalog:deep(SEED_CATALOG),teachers:deep(SEED_TEACHERS),requests:[]}}
 let db=load();
+migrateCatalogV08();
 if(!Array.isArray(db.consultRequests))db.consultRequests=[];
 if(!Array.isArray(db.studentIds))db.studentIds=['S1001','S1002'];
 if(!Array.isArray(db.teacherAdditions))db.teacherAdditions=[];
 if(!Array.isArray(db.deleteRequests))db.deleteRequests=[];
 // IDは学内の生徒を区別する識別子の試作。過去のデモを使っていた端末では既存IDを引き継ぎます。
 try{for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i);if(k&&k.startsWith(PROFILE_KEY+'-')){let id=k.slice((PROFILE_KEY+'-').length);if(/^S[0-9]{4}$/.test(id)&&!db.studentIds.includes(id))db.studentIds.push(id)}}}catch(e){}
-let student={name:'',grade:'',klass:'',purpose:'',keys:new Set(),careers:new Set(),deviceId:'',university:{name:'',faculty:'',department:''},universityReady:false};
+let student={name:'',grade:'',klass:'',purpose:'',keys:new Set(),careers:new Set(),deviceId:'',university:{name:'',faculty:'',department:''},universityReady:false,otherTopics:'',otherCareers:''};
 let teacherKeys=new Set();
 let teacherCareers=new Set();
 let studentStep=1;
@@ -401,7 +520,7 @@ function loadStudentProfile(){
  }catch(e){return null}
 }
 function saveStudentProfile(){
- const data={name:student.name,grade:student.grade,klass:student.klass,purpose:student.purpose,keys:[...student.keys],careers:[...student.careers],academicYear:academicYear(),deviceId:student.deviceId,university:{...student.university},universityReady:student.universityReady};
+ const data={name:student.name,grade:student.grade,klass:student.klass,purpose:student.purpose,keys:[...student.keys],careers:[...student.careers],academicYear:academicYear(),deviceId:student.deviceId,university:{...student.university},universityReady:student.universityReady,otherTopics:student.otherTopics,otherCareers:student.otherCareers};
  try{localStorage.setItem(studentProfileKey(),JSON.stringify(data));return true}catch(e){console.error('生徒デモデータの保存エラー',e);return false}
 }
 function restoreStudentProfile(){
@@ -411,6 +530,7 @@ function restoreStudentProfile(){
  student.purpose=Object.hasOwn(PURPOSE_LABELS,saved.purpose)?saved.purpose:'';
  student.keys=new Set(Array.isArray(saved.keys)?saved.keys.filter(x=>typeof x==='string').slice(0,300):[]);
  student.careers=new Set(Array.isArray(saved.careers)?saved.careers.filter(x=>ALL_CAREERS.has(x)):[]);
+ student.otherTopics=String(saved.otherTopics||'').slice(0,300);student.otherCareers=String(saved.otherCareers||'').slice(0,300);renderStudentExtras();
  renderCareerSelections('student');
  student.deviceId=typeof saved.deviceId==='string'?saved.deviceId:'';
  const uni=saved.university&&typeof saved.university==='object'?saved.university:{};
@@ -536,33 +656,105 @@ document.querySelectorAll('[data-purpose]').forEach(btn=>btn.addEventListener('c
  }));
 $('change-purpose').addEventListener('click',()=>setStudentStep(2));
 $('change-university').addEventListener('click',()=>setStudentStep(2.5));
-$('open-selector').addEventListener('click',()=>{const visible=$('student-selector').classList.contains('hide');show('student-selector',visible);$('open-selector').textContent=visible?'− 分野選択を閉じる':'＋ 興味のある分野を選ぶ';if(visible)$('student-category').focus()});
 function renderChecks(id,data,keys){const host=$(id);host.replaceChildren();if(!data.length){host.append(make('div','現在、この分類には登録項目がありません。','hint'));return}for(const entry of data){const label=make('label',undefined,'check'),check=document.createElement('input'),name=make('span',entry.name);check.type='checkbox';check.checked=keys.has(entry.key);check.addEventListener('change',()=>{if(check.checked)keys.add(entry.key);else keys.delete(entry.key);renderSelected(keys===student.keys?'student':'teacher');if(keys===student.keys){saveStudentProfile();show('matches-card',false)}});label.append(check,name);host.append(label)}}
-function renderPicker(who,change){const g=$(who+'-category').value;show(who+'-topic-panel',!!g);if(!g)return;
- if(change==='category')fillSelect(who+'-subcategory',subs(g),'中分類を選択',false);
- const s=$(who+'-subcategory').value;
- show(who+'-details',!!s);
- if(s)renderChecks(who+'-topic-list',items(g,s).map(name=>({name,key:topicKey(g,s,name)})),who==='student'?student.keys:teacherKeys);
- renderChecks(who+'-qualification-list',quals(g).map(name=>({name,key:qualificationKey(g,name)})),who==='student'?student.keys:teacherKeys);
+function renderPicker(who,change){
+ // 先生側には従来の詳細分類管理を維持。
+ if(who!=='teacher'){renderStudentCatalog();return}
+ const g=$('teacher-category').value;
+ show('teacher-topic-panel',!!g);if(!g)return;
+ if(change==='category')fillSelect('teacher-subcategory',subs(g),'中分類を選択',false);
+ const sub=$('teacher-subcategory').value;show('teacher-details',!!sub);
+ if(sub)renderChecks('teacher-topic-list',items(g,sub).map(name=>({name,key:topicKey(g,sub,name)})),teacherKeys);
+ renderChecks('teacher-qualification-list',quals(g).map(name=>({name,key:qualificationKey(g,name)})),teacherKeys);
 }
-function renderSelected(who){const keys=who==='student'?student.keys:teacherKeys;const host=$(who+'-selections');host.replaceChildren();if(who==='student')$('student-selection-count').textContent=`${keys.size}件`;if(!keys.size){host.append(make('span','まだ選択されていません。','muted'));return}for(const key of keys){const chip=make('span',undefined,'tag');chip.append(make('span',keyLabel(key)));const remove=make('button','×');remove.type='button';remove.setAttribute('aria-label',keyLabel(key)+'を解除');remove.addEventListener('click',()=>{keys.delete(key);renderSelected(who);renderPicker(who);if(who==='student'){saveStudentProfile();show('matches-card',false)}});chip.append(remove);host.append(chip)}}
-for(const who of ['student','teacher']){$(who+'-category').addEventListener('change',()=>renderPicker(who,'category'));$(who+'-subcategory').addEventListener('change',()=>renderPicker(who,'subcategory'))}
+function renderSelected(who){
+ const keys=who==='student'?student.keys:teacherKeys,host=$(who+'-selections');host.replaceChildren();
+ const custom=who==='student'?extraItems(student.otherTopics):[];
+ if(who==='student')$('student-selection-count').textContent=`${keys.size+custom.length}件`;
+ if(!keys.size&&!custom.length){host.append(make('span','まだ選択されていません。','muted'));return}
+ for(const key of keys){
+  const chip=make('span',undefined,'tag');chip.append(make('span',keyLabel(key)));
+  const remove=make('button','×');remove.type='button';remove.setAttribute('aria-label',keyLabel(key)+'を解除');
+  remove.addEventListener('click',()=>{keys.delete(key);renderSelected(who);renderPicker(who);if(who==='student'){saveStudentProfile();show('matches-card',false)}});
+  chip.append(remove);host.append(chip);
+ }
+ for(const name of custom)host.append(make('span','その他：'+name,'tag'));
+}
+$('teacher-category').addEventListener('change',()=>renderPicker('teacher','category'));
+$('teacher-subcategory').addEventListener('change',()=>renderPicker('teacher','subcategory'));
+
+// 「その他」は分類追加申請ではなく、生徒本人の条件にだけ保存する。
+const extraItems=s=>[...new Set(String(s||'').split(/[\n、,，]+/).map(clean).filter(Boolean))].slice(0,16);
+function renderStudentCatalog(){
+ const topics=[], qualifications=[];
+ for(const group of sortedGroups()){
+  for(const sub of subs(group))for(const name of items(group,sub))topics.push({name,key:topicKey(group,sub,name)});
+  for(const name of quals(group))qualifications.push({name,key:qualificationKey(group,name)});
+ }
+ const sort=(a,b)=>a.name.localeCompare(b.name,'ja')||a.key.localeCompare(b.key,'ja');
+ const query=norm($('student-topic-search').value),qquery=norm($('student-qualification-search').value);
+ const filtered=topics.filter(a=>!query||norm(a.name).includes(query)).sort(sort).slice(0,300);
+ const qfiltered=qualifications.filter(a=>!qquery||norm(a.name).includes(qquery)).sort(sort).slice(0,300);
+ const dup=new Map();for(const a of topics)dup.set(a.name,(dup.get(a.name)||0)+1);
+ const uniqueTopics=filtered.map(a=>({...a,name:dup.get(a.name)>1?a.name+'（'+parseKey(a.key).group+'）':a.name}));
+ const uniqueQual=qfiltered.map(a=>({...a,name:a.name}));
+ renderChecks('student-topic-list',uniqueTopics,student.keys);
+ renderChecks('student-qualification-list',uniqueQual,student.keys);
+ $('student-topic-hits').textContent=`表示：${filtered.length}件 / 登録済み${topics.length}件（複数選択できます）`;
+}
+function renderStudentExtras(){
+ for(const [key,field]of [['topics','otherTopics'],['careers','otherCareers']]){
+  const check=$('student-other-'+key+'-toggle');
+  check.checked=!!student[field];
+  $('student-other-'+key).value=student[field]||'';
+  show('student-other-'+key+'-wrap',check.checked);
+ }
+ renderSelected('student');renderCareerSelections('student');
+}
+for(const [key,field]of [['topics','otherTopics'],['careers','otherCareers']]){
+ $('student-other-'+key+'-toggle').addEventListener('change',e=>{
+  if(!e.target.checked){student[field]='';$('student-other-'+key).value=''}
+  show('student-other-'+key+'-wrap',e.target.checked);
+  renderSelected('student');renderCareerSelections('student');saveStudentProfile();show('matches-card',false);
+ });
+ $('student-other-'+key).addEventListener('input',e=>{
+  student[field]=e.target.value.slice(0,300);renderSelected('student');renderCareerSelections('student');saveStudentProfile();show('matches-card',false);
+ });
+}
+$('student-topic-search').addEventListener('input',renderStudentCatalog);
+$('student-qualification-search').addEventListener('input',renderStudentCatalog);
+
 function renderMatches(){
  const host=$('matches');host.replaceChildren();const chosen=[...student.keys],desired=[...student.careers];
- if(!chosen.length&&!desired.length){host.append(make('div','詳細分野・資格・職業から1件以上選択してください。','empty'));msg('search-status','検索条件がありません。',true);return}
+ if(!chosen.length&&!desired.length&&!extraItems(student.otherTopics).length&&!extraItems(student.otherCareers).length){host.append(make('div','分野・資格・職業またはその他から1件以上選択してください。','empty'));msg('search-status','検索条件がありません。',true);return}
  msg('consult-feedback','');const ranked=findTeacherRecommendations();
  msg('search-status',`${ranked.length}名の先生が見つかりました。`);
- if(!ranked.length){host.append(make('div','目的・分野・職業に合う先生はまだ登録されていません。条件を変えるか、先生への分野登録を依頼してください。','empty'));return}
+ if(!ranked.length){host.append(make('div','目的・分野・職業に合う先生はまだ登録されていません。条件を変更するか、先生に対応できる分野の登録を相談してください。','empty'));return}
  for(const r of ranked){
   const card=make('article',undefined,'teacher-card'),h=make('div',undefined,'head');
-  h.append(make('h3',r.t.name),make('span',`分野${r.exact.length}件・職業${r.directCareers.length}件が直接一致`,'sub'));
+  h.append(make('h3',r.t.name),make('span',`分野${r.exact.length+r.freeTopicMatches.length}件・職業${r.directCareers.length+r.freeCareerMatches.length}件が直接一致`,'sub'));
   card.append(h,make('p',r.t.note||'登録された範囲で相談できます。'));
   const reasons=make('div',undefined,'tagbox');
   for(const career of r.directCareers)reasons.append(make('span','職業一致：'+career,'tag'));
   for(const key of r.exact)reasons.append(make('span','分野一致：'+keyLabel(key),'tag'));
   for(const career of r.relatedCareers)reasons.append(make('span','関連分野からの候補：'+career,'tag'));
+  for(const name of r.freeTopicMatches)reasons.append(make('span','その他の分野一致：'+name,'tag'));
+  for(const name of r.freeCareerMatches)reasons.append(make('span','その他の職業一致：'+name,'tag'));
   card.append(reasons);
   if(r.relatedCareers.length)card.append(make('p','関連分野による候補は、その職業に直接対応できることを保証しません。','hint'));
+
+  const profile=make('details',undefined,'teacher-profile-details');
+  const profileSummary=make('summary','対応できる分野・職業と先生の登録情報を見る');profile.append(profileSummary);
+  const addLine=(label,items)=>{if(items&&items.length)profile.append(make('p',label+'：'+items.join('、')))};
+  addLine('対応専門分野',r.t.keys.filter(k=>parseKey(k).type==='topic').map(k=>parseKey(k).label));
+  addLine('対応資格・検定',r.t.keys.filter(k=>parseKey(k).type==='qual').map(k=>parseKey(k).label));
+  addLine('その他の専門分野',extraItems(r.t.extraTopics));
+  addLine('相談できる職業',[...(r.t.careers||[]),...extraItems(r.t.extraCareers)]);
+  if(r.t.strongTopics)profile.append(make('p','特に得意な分野：'+r.t.strongTopics));
+  if(r.t.consultAreas)profile.append(make('p','具体的に相談できる内容：'+r.t.consultAreas));
+  if(r.t.publicExperience)profile.append(make('p','公開している経験・資格：'+r.t.publicExperience));
+  card.append(profile);
+
   const actions=make('div',undefined,'row');
   const templateBtn=make('button','Teams用の申込文を作る','btn secondary sm');templateBtn.type='button';
   templateBtn.addEventListener('click',()=>{prepareTeamsTemplate(r.t,r.exact);$('teams-template-box').scrollIntoView({behavior:'smooth',block:'start'})});
@@ -579,7 +771,7 @@ function submitConsultation(t,matched){
  if(pending){msg('consult-feedback','この先生には申込済みです（デモ）。');return}
  const ok=confirm(`${t.name}への相談申込を、端末内デモに登録します。\n※この操作では先生へ実際の通知は届きません。`);
  if(!ok)return;
- const req={university:needsUniversity()?{...student.university}:null,careers:[...student.careers],id:'consult-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),teacherId:t.id,studentLoginId:activeUser.id,studentDeviceId:student.deviceId,studentName:student.name,studentGrade:student.grade,studentClass:student.klass,purpose:student.purpose,matchedKeys:matched.slice(0,30),createdAt:new Date().toISOString(),status:'new'};
+ const req={university:needsUniversity()?{...student.university}:null,careers:[...student.careers,...extraItems(student.otherCareers)],otherTopics:extraItems(student.otherTopics),id:'consult-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),teacherId:t.id,studentLoginId:activeUser.id,studentDeviceId:student.deviceId,studentName:student.name,studentGrade:student.grade,studentClass:student.klass,purpose:student.purpose,matchedKeys:matched.slice(0,30),createdAt:new Date().toISOString(),status:'new'};
  db.consultRequests.push(req);
  if(!save()){db.consultRequests.pop();msg('consult-feedback','申込デモの保存に失敗しました。ブラウザーの保存設定をご確認ください。',true);return}
  prepareTeamsTemplate(t,matched);
@@ -629,12 +821,13 @@ function renderTeacherList(){
  const t=db.teachers.find(x=>x.id===activeUser?.teacherId);
  if(!t){host.append(make('div','このIDに対応する先生が見つかりません。','empty'));return}
  const card=make('div',undefined,'teacher-card');
- card.append(make('h3',t.name),make('p','ID：'+t.loginId+' / '+t.purposes.map(p=>PURPOSE_LABELS[p]).join(' / ')),make('p',t.keys.length?t.keys.map(keyLabel).join('、'):'対応分野は未登録です。'),make('p',t.careers?.length?'対応職業：'+t.careers.join('、'):'対応職業の登録なし'));
+ card.append(make('h3',t.name),make('p','ID：'+t.loginId+' / '+t.purposes.map(p=>PURPOSE_LABELS[p]).join(' / ')),make('p',t.keys.length?t.keys.map(keyLabel).join('、'):'対応分野は未登録です。'),make('p',t.careers?.length?'対応職業：'+t.careers.join('、'):'対応職業の登録なし'),make('p',extraItems(t.extraTopics).length?'その他の対応分野：'+extraItems(t.extraTopics).join('、'):'') ,make('p',t.consultAreas?'相談可能な内容：'+t.consultAreas:''));
  host.append(card);
 }
 function populateTeacherForm(){
  const t=db.teachers.find(x=>x.id===activeUser?.teacherId);if(!t)return;
  $('teacher-name').value=t.name;$('teacher-note').value=t.note||'';
+ for(const [field,id] of [['extraTopics','teacher-extra-topics'],['extraCareers','teacher-extra-careers'],['strongTopics','teacher-strong-topics'],['consultAreas','teacher-consult-areas'],['publicExperience','teacher-public-experience']])$(id).value=t[field]||'';
  teacherKeys=new Set(t.keys);teacherCareers=new Set(t.careers||[]);renderCareerSelections('teacher');careerSelectOptions('teacher');
  document.querySelectorAll('input[name="teacher-purpose"]').forEach(x=>x.checked=t.purposes.includes(x.value));
  renderSelected('teacher');renderPicker('teacher');renderTeacherDeletionOptions();
@@ -644,18 +837,20 @@ $('teacher-save').addEventListener('click',()=>{
  if(activeUser?.role!=='teacher')return;
  const t=db.teachers.find(x=>x.id===activeUser.teacherId);if(!t){msg('teacher-status','先生IDが見つかりません。',true);return}
  const name=clean($('teacher-name').value),purposes=[...document.querySelectorAll('input[name="teacher-purpose"]:checked')].map(x=>x.value);
- if(!name||!purposes.length||(!teacherKeys.size&&!teacherCareers.size)){msg('teacher-status','表示名・対応目的と、分野または職業を登録してください。',true);return}
+ if(!name||!purposes.length||(!teacherKeys.size&&!teacherCareers.size&&!extraItems($('teacher-extra-topics').value).length&&!extraItems($('teacher-extra-careers').value).length)){msg('teacher-status','表示名・対応目的と、分野または職業を登録してください。',true);return}
  const before=deep(t);t.name=name;t.purposes=purposes;t.keys=[...teacherKeys];t.careers=[...teacherCareers];t.note=clean($('teacher-note').value);
+ for(const [field,id] of [['extraTopics','teacher-extra-topics'],['extraCareers','teacher-extra-careers'],['strongTopics','teacher-strong-topics'],['consultAreas','teacher-consult-areas'],['publicExperience','teacher-public-experience']])t[field]=$(id).value.trim().slice(0,400);
  if(!save()){Object.assign(t,before);msg('teacher-status','保存に失敗しました。',true);return}
  renderTeacherList();renderInboxTeacherOptions();populateTeacherForm();msg('teacher-status','担当分野を保存しました。');
 });
-function refreshGroups(){const groups=sortedGroups();for(const who of ['student','teacher']){const was=$(who+'-category').value;fillSelect(who+'-category',groups,'大分類を選択');if(was===$(who+'-category').value)renderPicker(who);else renderPicker(who,'category')}
-for(const id of ['request-category','admin-category','admin-preview','teacher-add-category'])fillSelect(id,groups,'大分類を選択');
-refreshRequest();refreshAdminFields();refreshTeacherAddFields();renderSelected('student');renderSelected('teacher');renderPreview();renderTeacherDeletionOptions();}
-function refreshRequest(){const type=$('request-type').value,group=$('request-category').value;show('request-sub-field',type==='topic');if(type==='topic')fillSelect('request-subcategory',subs(group),'中分類を選択');}
-$('request-category').addEventListener('change',refreshRequest);$('request-type').addEventListener('change',refreshRequest);
-function makeRequest(type,group,sub,name){const entry={id:'r'+Date.now()+Math.random().toString(36).slice(2),type,group,sub,name};db.requests.push(entry);save();renderRequests()}
-$('request-submit').addEventListener('click',()=>{const type=$('request-type').value,group=$('request-category').value,sub=$('request-subcategory').value,name=clean($('request-name').value);if(!name||(type!=='category'&&!group)||(type==='topic'&&!sub)){msg('request-status','追加先と項目名を入力してください。',true);return}makeRequest(type,group,sub,name);$('request-name').value='';msg('request-status','追加申請を登録しました（試作版）。')});
+function refreshGroups(){
+ const groups=sortedGroups();
+ const old=$('teacher-category').value;
+ fillSelect('teacher-category',groups,'大分類を選択');
+ renderPicker('teacher',old===$('teacher-category').value?'':'category');
+ for(const id of ['admin-category','admin-preview','teacher-add-category'])fillSelect(id,groups,'大分類を選択');
+ renderStudentCatalog();refreshAdminFields();refreshTeacherAddFields();renderSelected('student');renderSelected('teacher');renderPreview();renderTeacherDeletionOptions();
+}
 function refreshAdminFields(){const type=$('admin-type').value,group=$('admin-category').value;show('admin-group-field',type!=='category');show('admin-sub-field',type==='topic');if(type==='topic')fillSelect('admin-subcategory',subs(group),'中分類を選択')}
 $('admin-type').addEventListener('change',refreshAdminFields);$('admin-category').addEventListener('change',refreshAdminFields);
 function addItem(type,group,sub,input){const name=clean(input);if(!name)return '空欄';if(name.includes('|')||['__proto__','prototype','constructor'].includes(name))return '使用できない名称です';if(type==='category'){if(sortedGroups().some(x=>norm(x)===norm(name)))return '重複';db.catalog[name]={sub:{},quals:[]};return null}if(!objHas(db.catalog,group))return '追加先の大分類がありません';if(type==='subcategory'){if(subs(group).some(x=>norm(x)===norm(name)))return '重複';db.catalog[group].sub[name]=[];return null}
@@ -760,13 +955,13 @@ function renderDeleteRequests(){
  }
 }
 
-function renderRequests(){const host=$('requests');host.replaceChildren();if(!db.requests.length){host.append(make('div','追加申請はありません。','empty'));return}for(const r of db.requests){const div=make('div',undefined,'admin-box');div.append(make('strong',r.name),make('div',`${TYPE_LABELS[r.type]} / ${r.group||'新規'}${r.sub?' / '+r.sub:''}`,'hint'));const row=make('div',undefined,'row'),ok=make('button','承認して追加','btn sm'),no=make('button','却下','btn muted sm');ok.addEventListener('click',()=>{const result=addItem(r.type,r.group,r.sub,r.name);if(result){alert('追加できませんでした：'+result);return}db.requests=db.requests.filter(x=>x.id!==r.id);save();refreshGroups();renderRequests();renderStats()});no.addEventListener('click',()=>{db.requests=db.requests.filter(x=>x.id!==r.id);save();renderRequests();renderStats()});row.append(ok,no);div.append(row);host.append(div)}}
+function renderRequests(){ /* v0.8：生徒からの項目追加申請は廃止 */ }
 function renderStats(){const groups=sortedGroups();const subcount=groups.reduce((n,g)=>n+subs(g).length,0),details=groups.reduce((n,g)=>n+Object.values(db.catalog[g].sub).reduce((m,a)=>m+a.length,0),0),qcount=groups.reduce((n,g)=>n+quals(g).length,0);$('stats').replaceChildren();for(const [a,b]of [[groups.length,'大分類'],[subcount,'中分類'],[details+qcount,'詳細分野・資格']]){const stat=make('div',undefined,'stat');stat.append(make('strong',a),make('span',b));$('stats').append(stat)}}
-$('reset').addEventListener('click',()=>{if(!confirm('デモの分類・先生・追加申請・相談申込を初期状態に戻しますか？'))return;db={catalog:deep(SEED_CATALOG),teachers:deep(SEED_TEACHERS),requests:[],consultRequests:[],studentIds:['S1001','S1002'],teacherAdditions:[],deleteRequests:[]};normalizeTeacherAccounts();student.keys.clear();teacherKeys.clear();saveStudentProfile();save();refreshGroups();renderTeacherList();renderInboxTeacherOptions();renderRequests();renderDeleteRequests();renderStats();renderAdminStudentIds();show('matches-card',false)});
+$('reset').addEventListener('click',()=>{if(!confirm('デモの分類・先生・追加申請・相談申込を初期状態に戻しますか？'))return;db={catalog:deep(SEED_CATALOG),teachers:deep(SEED_TEACHERS),requests:[],consultRequests:[],studentIds:['S1001','S1002'],teacherAdditions:[],deleteRequests:[]};migrateCatalogV08();normalizeTeacherAccounts();student.keys.clear();teacherKeys.clear();saveStudentProfile();save();refreshGroups();renderTeacherList();renderInboxTeacherOptions();renderRequests();renderDeleteRequests();renderStats();renderAdminStudentIds();show('matches-card',false)});
 window.addEventListener('storage',(e)=>{if(e.key===KEY){db=load();if(!Array.isArray(db.consultRequests))db.consultRequests=[];renderTeacherInbox();refreshGroups();renderTeacherDeletionOptions()}});
 // Teams送信文の導入部分のみを生成。氏名・学年・クラス・番号・詳細は自動挿入しません。
 function prepareTeamsTemplate(teacher,matchedKeys,slot=null){
- const topics=[...student.keys].map(keyLabel);const careers=[...student.careers];
+ const topics=[...student.keys].map(keyLabel).concat(extraItems(student.otherTopics).map(x=>'その他：'+x));const careers=[...student.careers].concat(extraItems(student.otherCareers).map(x=>'その他：'+x));
  const universityInfo=needsUniversity()?`\n大学名：${student.university.name||'未定'}\n学部：${student.university.faculty||'未定'}\n学科：${student.university.department||'未定'}`:'';
  const slotInfo=slot?`\n【希望日時】\n${Number(slot.date.slice(0,4))}年${Number(slot.date.slice(5,7))}月${Number(slot.date.slice(8,10))}日 ${slot.time}～${nextQuarterHour(slot.time)}\n予定表の表示：${SLOT_MARKS[slot.state]}（${SLOT_LABELS[slot.state]}）\n※上記の時間にご相談できるかご確認をお願いいたします。`:'';
  $('teams-template').value=`${teacher.name}\n\n突然のご連絡失礼いたします。${student.grade}・${student.klass}の${student.name}です。\n進路についてご相談したく、ご連絡いたしました。\n\n【相談目的】\n${PURPOSE_LABELS[student.purpose]||'未選択'}${universityInfo}\n\n【興味分野・資格】\n${topics.length?topics.join('、'):'未選択'}\n\n【目指している職業】\n${careers.length?careers.join('、'):'未定'}${slotInfo}\n\n【具体的に相談したい内容】\n（ここにご自身で相談内容をご記入ください）\n\nお忙しいところ恐れ入りますが、ご都合をお知らせいただけますと幸いです。\nよろしくお願いいたします。`;
@@ -824,7 +1019,7 @@ function renderHome(){
  $('home-subtitle').textContent=`ログインID：${activeUser.id}（${{student:'生徒',teacher:'先生',admin:'管理者'}[role]}）`;
  $('session-label').textContent=`${{student:'生徒',teacher:'先生',admin:'管理者'}[role]}ID：${activeUser.id}（デモ）`;
 }
-function resetStudentContext(){student={name:'',grade:'',klass:'',purpose:'',keys:new Set(),careers:new Set(),deviceId:'',university:{name:'',faculty:'',department:''},universityReady:false};renderCareerSelections('student');setStudentStep(1)}
+function resetStudentContext(){student={name:'',grade:'',klass:'',purpose:'',keys:new Set(),careers:new Set(),deviceId:'',university:{name:'',faculty:'',department:''},universityReady:false,otherTopics:'',otherCareers:''};renderStudentExtras();renderCareerSelections('student');setStudentStep(1)}
 function login(id){
  const info=getRoleInfo(String(id).trim().toUpperCase());
  if(!info){msg('login-status','このIDは使用できません。試作用のIDを確認してください。',true);return}
