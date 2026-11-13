@@ -1,1101 +1,180 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light">
-<title>教員マッチングアプリ（仮）｜比較試作版 A</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>教員マッチングアプリ（試作）</title>
 <style>
-:root{--navy:#152d45;--ink:#1b3148;--muted:#607388;--bg:#f4f7fa;--paper:#fff;--line:#dae3ec;--blue:#1767a4;--blue-pale:#edf5fb;--green:#087254;--red:#b33d46;--focus:#1767a4;--shadow:0 8px 28px rgba(22,46,73,.055)}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.65}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #80b7ed;outline-offset:2px}
-.wrap{width:min(1100px,calc(100% - 32px));margin:auto}.top{background:var(--paper);border-bottom:1px solid var(--line)}.top-inner{min-height:79px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-size:19px;font-weight:800;letter-spacing:-.025em}.brand small{display:block;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:500}.version{display:inline-block;color:var(--blue);background:var(--blue-pale);font-size:11px;padding:5px 10px;border-radius:20px;white-space:nowrap}
-.alert{background:#fff9e9;border:1px solid #ecd89a;color:#735b1e;border-radius:12px;font-size:12px;padding:13px 15px;margin:24px 0 14px}.tabs{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 22px}.tab{color:#435e79;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 16px;font-weight:700}.tab[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}.screen{display:none}.screen.active{display:block}.heading{margin:0 0 16px}.heading h1{font-size:clamp(23px,3vw,29px);letter-spacing:-.035em;line-height:1.35;margin:0 0 5px}.heading p{margin:0;color:var(--muted);font-size:13px}.card{border:1px solid var(--line);border-radius:17px;background:var(--paper);padding:24px;box-shadow:var(--shadow);margin-bottom:17px}.card h2{font-size:18px;margin:0 0 6px}.card h3{font-size:15px;margin:0}.subtext{color:var(--muted);font-size:12px;margin:4px 0 19px}.progress{display:flex;align-items:center;gap:7px;margin-bottom:18px}.progress .bar{height:5px;border-radius:10px;flex:1;background:#e4ecf3}.progress .bar.done{background:var(--blue)}.step-caption{color:var(--muted);font-size:12px;margin-left:9px;white-space:nowrap}.field{margin:18px 0}.field label,.field-title{display:block;font-size:13px;font-weight:700;margin-bottom:7px}.req{font-size:10px;color:var(--red);margin-left:6px}.control{display:block;width:100%;max-width:100%;background:#fff;border:1px solid #bccbd9;border-radius:10px;padding:11px 12px;color:var(--ink);font-size:15px}.control::placeholder{color:#91a0ad}.control:disabled{opacity:.6;background:#f4f7fa}.control-select{appearance:auto}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.btn{display:inline-flex;justify-content:center;align-items:center;gap:7px;border:1px solid var(--blue);color:#fff;background:var(--blue);font-weight:700;border-radius:10px;padding:11px 17px;line-height:1.4;min-height:44px}.btn.secondary{color:var(--blue);background:#fff}.btn.muted{color:var(--muted);background:#fff;border-color:var(--line)}.btn.danger{color:var(--red);background:#fff;border-color:#e2b3b5}.btn.sm{padding:6px 10px;font-size:12px;min-height:30px}.btn:disabled{opacity:.55;cursor:not-allowed}.hide{display:none!important}.hint{color:var(--muted);font-size:12px;margin:7px 0}.status{font-size:12px;color:var(--green);font-weight:600}.status.error{color:var(--red)}
-.choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.choice{padding:18px 14px;min-height:126px;border:1.5px solid var(--line);border-radius:13px;background:#fff;text-align:left;color:var(--ink);transition:.15s}.choice:hover{border-color:#7eaad3;background:#f7fbff}.choice strong{display:block;font-size:16px;margin-bottom:7px}.choice span{display:block;font-size:12px;color:var(--muted)}.identity{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#eaf2fa;border:1px solid #d5e3ef;padding:13px 16px;border-radius:12px;margin-bottom:15px}.identity .name{font-size:14px;font-weight:700}.identity .meta{font-size:12px;color:var(--muted)}.eyebrow{font-size:12px;color:var(--blue);font-weight:800;letter-spacing:.02em}.selector{border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px;background:#fbfdff}.selector .field{margin:9px 0 15px}.minor-title{font-weight:800;font-size:14px;margin:16px 0 9px}.divider{border-top:1px solid var(--line);margin:20px 0}.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.check{display:flex;align-items:flex-start;gap:9px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px 11px;font-size:13px;cursor:pointer;min-height:44px}.check input{margin-top:4px;width:16px;height:16px;accent-color:var(--blue);flex-shrink:0}.check:has(input:checked){background:#eaf3fc;border-color:#74a4d0}.tagbox{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.tag{display:inline-flex;gap:7px;align-items:center;background:#edf4fa;border:1px solid #d5e4ef;border-radius:30px;padding:5px 11px;font-size:12px}.tag button{border:0;color:#496178;background:transparent;padding:0;font-size:17px;line-height:1}.muted{color:var(--muted)}.teacher-card{border:1px solid var(--line);border-radius:13px;padding:15px;margin:11px 0}.teacher-card .head{display:flex;justify-content:space-between;gap:10px;align-items:start}.teacher-card h3{font-size:15px}.teacher-card p{font-size:12px;color:var(--muted);margin:7px 0}.teacher-card .sub{font-size:11px;color:var(--green);font-weight:700}.teacher-card .tag{background:#f4f7fa;border:0}.empty{border:1px dashed #b9c8d7;padding:17px;border-radius:10px;color:var(--muted);font-size:13px;background:#fafcfe}.admin-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:17px}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:16px}.stat{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px}.stat strong{display:block;font-size:21px}.stat span{font-size:11px;color:var(--muted)}.admin-box{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.admin-box:last-child{border:0}.footer{margin-top:27px;padding:20px 0 38px;color:var(--muted);font-size:12px;text-align:center}.teacher-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.small-note{background:#edf5fb;border-radius:10px;padding:12px 14px;font-size:12px;color:#375e7a}.step{animation:fade .2s ease}@keyframes fade{from{opacity:.75;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:760px){.card{padding:18px}.choice-grid,.teacher-grid,.admin-layout{grid-template-columns:1fr}.choice{min-height:92px}.checks,.two{grid-template-columns:1fr}.top-inner{min-height:69px}.brand{font-size:17px}.wrap{width:min(100% - 22px,1100px)}.tabs{gap:6px}.tab{font-size:12px;padding:9px 10px}.alert{margin-top:14px}.identity{align-items:flex-start}.step-caption{font-size:10px}}
-
-/* v0.5.0: ログインIDに応じた表示・画面移動・Teamsテンプレート */
-.session-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
-/* v0.8.0: 控えめな画面下部のナビゲーション */
-body.has-bottom-navigation{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}
-.navigation{position:fixed;top:auto;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:100;display:flex;align-items:center;justify-content:center;gap:3px;width:max-content;max-width:calc(100% - 24px);margin:0;padding:5px;background:rgba(255,255,255,.94);border:1px solid #dce5ec;border-radius:12px;box-shadow:0 2px 12px rgba(22,46,73,.08);backdrop-filter:blur(10px)}
-.navigation .btn{flex:0 0 auto;max-width:none;min-height:38px;padding:7px 13px;font-size:12px;font-weight:600;line-height:1.3;white-space:nowrap;color:#5c7082;background:transparent;border:1px solid transparent;border-radius:8px}
-.navigation .btn.secondary,.navigation .btn.muted{background:transparent;color:#5c7082;border-color:transparent}
-.navigation #nav-next:not(:disabled){background:#edf4fa;color:#355f7f}
-.navigation .btn:disabled{opacity:.38}
-.navigation .btn:not(:disabled):hover{background:#edf4f9;color:#234b6d}
-@media(max-width:600px){.navigation{gap:2px;padding:4px;bottom:calc(8px + env(safe-area-inset-bottom,0px))}.navigation .btn{padding:7px 10px;min-height:38px;font-size:12px}}
-.login-card{max-width:660px;margin:22px auto 35px}
-.help-ids{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
-.help-ids button{display:block;border:1px solid var(--line);background:var(--blue-pale);border-radius:10px;padding:12px;text-align:left;color:var(--ink);cursor:pointer}
-.help-ids strong{display:block;font-size:13px}
-.help-ids small{display:block;color:var(--muted);font-size:11px}
-.text-template{width:100%;min-height:112px;resize:vertical}
-.teacher-only{background:#eaf2fa;border-radius:9px;padding:10px 12px;margin:9px 0;font-size:13px}
-@media(max-width:600px){.help-ids{grid-template-columns:1fr}.session-bar .btn{min-height:34px}}
-/* 大学情報の入力（A・B共通） */
-.university-field-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.university-field-row .control{flex:1 1 220px;width:auto;min-width:180px}
-.university-undecided{display:inline-flex!important;align-items:center;gap:6px;white-space:nowrap;border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:var(--blue-pale);margin:0!important;font-size:13px}
-.university-undecided input{width:17px;height:17px;accent-color:var(--blue);margin:0}
-@media(max-width:480px){.university-field-row{align-items:stretch}.university-field-row .control{flex-basis:100%}.university-undecided{width:max-content}}
-
-
-/* v0.8: 生徒側は大分類・中分類なしで直接検索。先生側の詳細分類は維持。 */
-.scroll-checks{max-height:278px;overflow-y:auto;overscroll-behavior:contain;padding:4px 3px 6px;align-content:start;border:1px solid var(--line);border-radius:11px;background:#fafcfe}
-.scroll-checks .check{margin:1px 3px}
-.catalog-count{font-size:12px;color:var(--muted);margin:0 0 7px}
-.catalog-more{border:1px solid var(--line);border-radius:11px;padding:12px 13px;margin:14px 0}
-.catalog-more summary{font-size:13px;font-weight:700;cursor:pointer;color:var(--blue)}
-.catalog-more[open] summary{margin-bottom:8px}
-.other-area{border:1px solid var(--line);border-radius:11px;margin:12px 0;padding:11px;background:#fbfdff}
-.other-area .other-toggle{border:0;background:transparent;min-height:auto;padding:4px 1px}
-.other-area .field{margin:10px 0 2px}
-.teacher-profile-details{margin:12px 0;padding:10px 12px;border:1px solid var(--line);background:#fafcfe;border-radius:10px}
-.teacher-profile-details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--blue)}
-.teacher-profile-details p{margin:8px 0;overflow-wrap:anywhere}
-.teacher-public-fields textarea{resize:vertical}
-@media(max-width:760px){.scroll-checks{grid-template-columns:1fr;max-height:320px}}
+:root{--ink:#192f49;--muted:#60768d;--blue:#21648f;--light:#f3f7fa;--border:#d6e2eb;--white:#fff;--good:#0b7255;--danger:#a33f46;--focus:#f0ac3b}*{box-sizing:border-box}body{margin:0;background:var(--light);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;color:var(--ink);line-height:1.63;font-size:15px}button,input,select,textarea{font:inherit}button{cursor:pointer}input,select,textarea{font-size:15px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:2px}button:disabled{opacity:.4;cursor:not-allowed}.wrap{width:min(1050px,calc(100% - 28px));margin:0 auto}.top{background:white;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}.top-row{display:flex;gap:12px;align-items:center;justify-content:space-between;min-height:66px;flex-wrap:wrap}.brand{font-weight:800;font-size:17px;letter-spacing:-.025em}.brand small{font-weight:500;color:var(--muted);font-size:11px;display:block}.top-right{display:flex;gap:8px;align-items:center}.lang{border:1px solid #b6cddd;padding:5px 8px;background:#fff;color:#315a7a;border-radius:9px;font-size:12px}.lang.current{background:var(--ink);color:white;border-color:var(--ink)}.version{background:#e9f3fa;color:#286186;padding:4px 8px;border-radius:100px;font-size:11px;font-weight:700}.screen{display:none}.screen.active{display:block}.notice{background:#fff8e9;color:#705719;border:1px solid #ead8a5;padding:12px 15px;border-radius:10px;font-size:12px;margin:18px 0}.card{background:var(--white);border:1px solid var(--border);border-radius:16px;margin:14px 0;padding:23px;box-shadow:0 5px 20px rgba(24,49,74,.035)}h1{font-size:clamp(22px,3vw,28px);margin:0 0 4px;line-height:1.35;letter-spacing:-.025em}h2{font-size:19px;margin:0 0 10px}h3{font-size:16px;margin:0 0 9px}.sub{color:var(--muted);font-size:13px;margin:0 0 16px}.small{font-size:12px;color:var(--muted)}.tiny{font-size:11px;color:var(--muted)}.status{font-size:12px;color:var(--good);font-weight:600;min-height:20px}.status.error{color:var(--danger)}.field{margin:14px 0}.field>label,.field>.label{display:block;font-size:13px;font-weight:700;margin:0 0 6px}.control{width:100%;display:block;border:1px solid #bacbd9;border-radius:9px;padding:10px 11px;background:white;color:var(--ink);min-height:43px}.control:disabled{background:#f1f5f8}.control::placeholder{color:#93a1af}.split{display:grid;grid-template-columns:1fr 1fr;gap:13px}.split3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.row{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.row.between{justify-content:space-between}.btn{border-radius:9px;border:1px solid var(--blue);background:var(--blue);color:white;font-weight:700;padding:9px 15px;min-height:40px}.btn.secondary{background:white;color:var(--blue)}.btn.ghost{background:transparent;border-color:var(--border);color:var(--muted)}.btn.danger{background:white;border-color:#dfb7b7;color:var(--danger)}.btn.sm{font-size:12px;min-height:32px;padding:5px 10px}.hide{display:none!important}.chips{display:flex;gap:7px;flex-wrap:wrap;padding:5px 0}.chip{display:inline-flex;align-items:center;gap:6px;background:#eaf3f9;color:#2d5978;padding:5px 10px;font-size:12px;border-radius:30px;border:1px solid #cddfec}.chip button{border:0;background:transparent;padding:0;color:#55718b;cursor:pointer;font-weight:700}.pill{font-size:11px;padding:4px 9px;border-radius:20px;background:#ecf2f6;color:#4c6579;display:inline-block}.pill.good{background:#e5f6ee;color:#076e53}.hr{border:0;border-top:1px solid var(--border);margin:20px 0}.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.choice{border:1.5px solid var(--border);background:white;border-radius:11px;text-align:left;padding:15px;min-height:102px;color:var(--ink)}.choice strong{display:block;font-size:15px;margin-bottom:5px}.choice span{font-size:12px;color:var(--muted)}.choice.active{background:#ebf5fb;border-color:#4382aa;box-shadow:inset 0 0 0 1px #4382aa}.check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:295px;overflow:auto;padding:6px;border:1px solid var(--border);background:#fafcfe;border-radius:10px}.check{display:flex;align-items:flex-start;gap:9px;min-height:40px;background:white;border-radius:8px;border:1px solid var(--border);padding:8px 10px;font-size:13px;cursor:pointer}.check:has(input:checked){border-color:#76a6c4;background:#edf5fb}.check input{accent-color:var(--blue);width:16px;height:16px;margin:3px 0 0;flex-shrink:0}.check.single{display:inline-flex}.step-progress{display:flex;gap:5px;align-items:center;margin:14px 0}.step-progress .bar{height:6px;background:#e0e9f0;flex:1;border-radius:50px}.step-progress .bar.on{background:#337fb0}.step-progress .label{font-size:11px;color:var(--muted);margin-left:9px;white-space:nowrap}.step{display:none}.step.active{display:block}.tagline{font-size:12px;color:#2c698d;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}.muted-box{padding:12px 14px;border-radius:10px;background:#eff5f9;color:#3b637e;font-size:12px;margin:12px 0}.bottom{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:25;display:flex;gap:3px;background:rgba(255,255,255,.97);border:1px solid #d5e2eb;border-radius:12px;padding:5px;box-shadow:0 4px 16px rgba(16,45,75,.13);width:max-content;max-width:calc(100% - 24px)}.bottom .btn{font-size:12px;min-height:36px;padding:7px 12px;border:none;background:transparent;color:#607487;white-space:nowrap}.bottom .btn.primary{background:#e8f1f7;color:#295c7d}body.with-nav{padding-bottom:95px}.teacher-result{border:1px solid var(--border);border-radius:13px;padding:15px;margin:12px 0;background:white}.teacher-result .title-line{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.reasons{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.reason{font-size:11px;background:#eaf3f8;border-radius:7px;padding:5px 8px;color:#31658b}.reason.related{background:#f1f3f5;color:#617181}.teacher-result details{font-size:12px;margin:12px 0;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:#fafcfe}.teacher-result summary{cursor:pointer;font-weight:700;color:#2c678e}.teacher-result p{font-size:12px;margin:7px 0}.university-row{border:1px solid var(--border);border-radius:10px;padding:13px;margin:9px 0;background:#fafcfe}.undecided{display:flex;align-items:center;gap:6px;white-space:nowrap;max-width:max-content;font-size:12px;color:var(--muted)}.undecided input{accent-color:var(--blue)}.university-entry{padding:13px;margin:9px 0;background:#f8fbfd;border:1px solid var(--border);border-radius:9px}.file-btn{border:0;background:none;color:var(--blue);font-weight:700;padding:0;text-decoration:underline}.box-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:8px;max-height:430px;overflow-y:auto}.calendar{border-collapse:separate;border-spacing:0;min-width:710px;width:100%;background:white;text-align:center;font-size:12px;table-layout:fixed}.calendar th,.calendar td{border-bottom:1px solid #d5dee6;border-right:1px solid #e1e7ec;padding:0}.calendar th{background:#f1f5f9;padding:7px 0;position:sticky;top:0;z-index:3}.calendar .time{position:sticky;left:0;z-index:4;background:#f5f8fa;font-weight:700;width:75px}.calendar button{border:0;background:transparent;width:100%;height:36px;font-size:20px;cursor:pointer;color:#6b7782}.calendar button.s-available{color:#b94964}.calendar button.s-unknown{color:#a78034}.calendar button.selected{background:#d7ebfb;outline:2px solid #286eac;outline-offset:-2px}.calendar button.s-busy{cursor:not-allowed}.calendar .cell-edit{cursor:pointer}.seg{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}.seg button{padding:6px 10px;border:1px solid #d0dee8;background:#fff;border-radius:7px;font-size:12px;color:#47677d}.seg button.on{background:var(--ink);border-color:var(--ink);color:#fff}.login-card{max-width:650px;margin:25px auto}.sample-ids{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.empty{border:1px dashed #b5c6d4;border-radius:9px;padding:15px;background:#fafcfe;color:var(--muted);font-size:13px}.inline-warning{color:var(--danger);font-size:12px}.footer{text-align:center;color:var(--muted);font-size:11px;margin:35px auto;padding-bottom:20px}.switchrow{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.teacher-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}.teacher-layout>.card{margin:0 0 16px}.section-note{font-size:12px;color:var(--muted);margin-top:2px}.locked{opacity:.7}.nowrap{white-space:nowrap}@media(max-width:760px){.split,.split3,.teacher-layout,.choices,.check-grid{grid-template-columns:1fr}.card{padding:17px}.choice{min-height:72px;padding:12px}.top-row{min-height:60px}.brand{font-size:15px}.top-right{gap:5px}.version{font-size:10px}.lang{padding:4px 6px}.bottom{gap:1px;padding:4px}.bottom .btn{padding:6px 10px}.teacher-result .title-line{display:block}}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap top-inner"><div class="brand">教員マッチングアプリ <span class="muted">（仮）</span><small>目的と専門分野から、相談できる先生を探す</small></div><span class="version">比較試作版 A v0.8.0 / 非AI</span></div></header>
+<header class="top"><div class="wrap top-row"><div class="brand" data-i18n="brand">教員マッチングアプリ<small data-i18n="brandSub">目的に合う学校の先生を探す</small></div><div class="top-right"><span class="version" id="version-label"></span><button class="lang" id="lang-ja" type="button" aria-label="日本語">日本語</button><button class="lang" id="lang-en" type="button" aria-label="English">EN</button></div></div></header>
 <main class="wrap">
-<div class="alert"><strong>架空データによる動作確認専用です。</strong> ログインIDは画面振り分けのデモで、本人確認や安全なアクセス制御ではありません。ID・分類・相談申込はこのブラウザー内だけの試作データです。別端末との同期や先生への通知は行われません。実在する生徒・教員の個人情報は入力しないでください。</div>
-
-<div class="session-bar hide" id="session-bar"><div class="name" id="session-label" aria-live="polite"></div><button class="btn muted sm" id="logout" type="button">ログアウト</button></div>
-<nav class="navigation hide" id="navigation" aria-label="画面の移動">
-  <button class="btn secondary" id="nav-back" type="button">← 戻る</button>
-  <button class="btn muted" id="nav-home" type="button">⌂ ホーム</button>
-  <button class="btn" id="nav-next" type="button">進む →</button>
-</nav>
-<section id="login" class="screen active">
- <div class="card login-card"><div class="heading"><h1>IDログイン（試作版）</h1><p>ログインIDから、生徒・先生・管理者それぞれの画面へ進みます。</p></div>
- <div class="small-note"><strong>安全性に関する重要なお知らせ：</strong>これは画面の振り分けを試すデモです。IDだけで誰でも入れるため、本人確認も不正アクセス防止もできません。実際の学校で使う場合は認証サービスとサーバー側の権限管理が必要です。実在の個人情報は入力しないでください。</div>
- <label class="field" for="login-id"><span class="field-title">ログインID</span><input id="login-id" class="control" autocomplete="off" autocapitalize="characters" maxlength="12" placeholder="例：S1001"></label>
- <div class="row"><button class="btn" id="login-button" type="button">ログイン</button><span class="status" id="login-status" aria-live="polite"></span></div>
- <div class="divider"></div><div class="minor-title">動作確認用のID（選ぶと入力されます）</div>
- <div class="help-ids"><button type="button" data-demo-id="S1001"><strong>生徒</strong><small>S1001</small></button><button type="button" data-demo-id="T1001"><strong>先生</strong><small>T1001</small></button><button type="button" data-demo-id="A1001"><strong>管理者</strong><small>A1001</small></button></div>
- <p class="hint">生徒IDは管理者画面で発行し、同じIDが重ならないよう管理します。IDは生徒を区別する番号であり、パスワード付きの個人アカウントではありません。別端末間でのIDの一意性・本人確認は未対応です。</p>
- </div>
+<div class="notice" data-i18n="demoNotice">これは架空データを使った操作確認用の試作です。IDは本人認証ではなく、入力内容はこのブラウザー内だけに保存されます。実在する生徒・先生の個人情報を入力しないでください。</div>
+<div class="row between hide" id="session-strip" style="padding:2px 0 0"><span id="session-label" class="small"></span><button type="button" id="logout" class="btn ghost sm" data-i18n="logout">ログアウト</button></div>
+<section id="login" class="screen active"><div class="card login-card"><h1 data-i18n="loginTitle">デモIDでログイン</h1><p class="sub" data-i18n="loginIntro">生徒・先生・管理者の画面を試せます。実在の個人情報は入力しないでください。</p><div class="field"><label for="login-id" data-i18n="loginId">ログインID</label><input class="control" id="login-id" autocapitalize="characters" autocomplete="off" placeholder="S1001 / T1001 / A1001"></div><div class="row"><button class="btn" id="do-login" type="button" data-i18n="loginAction">ログイン</button><span class="status" id="login-msg"></span></div><hr class="hr"><p class="small" data-i18n="tryId">試すIDを選択してください：</p><div class="sample-ids"><button class="btn secondary sm" type="button" data-demo="S1001" data-i18n="sampleStudent">生徒 S1001</button><button class="btn secondary sm" type="button" data-demo="T1001" data-i18n="sampleTeacher">先生 T1001</button><button class="btn secondary sm" type="button" data-demo="A1001" data-i18n="sampleAdmin">管理者 A1001</button></div></div></section>
+<section id="home" class="screen"><div class="card"><h1 id="home-title"></h1><p class="sub" id="home-desc"></p><button class="btn" id="home-open" type="button"></button></div><div class="card"><h2 data-i18n="aboutTitle">この試作でできること</h2><div class="small" id="home-about"></div></div></section>
+<section id="student" class="screen"><h1 data-i18n="studentTitle">相談する先生を探す</h1><p class="sub" data-i18n="studentIntro">保存済みの入力内容を確認しながら、毎回最初のページから進めます。</p><div class="step-progress" id="progress"></div>
+<div id="step-1" class="step card"><div class="tagline" id="step-label-1"></div><h2 data-i18n="identityTitle">基本情報の確認</h2><p class="sub" data-i18n="identityInfo">登録済みの内容があれば表示します。変更がなければそのまま「進む」を選んでください。</p><div class="muted-box hide" id="new-year-msg" data-i18n="newYear">新年度になったため、学年・クラスを確認し直してください。</div><div class="field"><label for="student-name" data-i18n="name">氏名（デモ用）</label><input class="control" id="student-name" maxlength="40" autocomplete="off" data-placeholder="namePlaceholder"></div><div class="split"><div class="field"><label for="student-grade" data-i18n="grade">学年</label><select class="control" id="student-grade"></select></div><div class="field"><label for="student-class" data-i18n="class">クラス</label><input class="control" id="student-class" maxlength="15" autocomplete="off" data-placeholder="classPlaceholder"></div></div><p class="status" id="student-identity-status"></p></div>
+<div id="step-2" class="step card"><div class="tagline" id="step-label-2"></div><h2 data-i18n="purposeTitle">先生に相談したい目的</h2><p class="sub" data-i18n="purposeInfo">前回の選択も保持されます。毎回確認したうえで進んでください。</p><div class="choices" id="purpose-choices"></div></div>
+<div id="step-uni" class="step card"><div class="tagline" id="step-label-uni"></div><h2 data-i18n="universityTitle">大学・学部・学科</h2><p class="sub" data-i18n="universityInfo">決まっている項目だけ入力してください。大学名、学部、学科のうち一つだけでも先生を検索できます。</p><div id="student-uni-fields"></div><p class="status" id="university-msg"></p></div>
+<div id="step-3" class="step"><div class="card"><div class="tagline" id="step-label-3"></div><h2 data-i18n="interestsTitle">興味分野・目指す職業</h2><p class="sub" data-i18n="interestInfo">大学情報だけで検索することも、専門分野・職業と組み合わせることもできます。未入力でも進めます。</p><div class="muted-box" id="student-condition-summary"></div><h3 data-i18n="topicSelectTitle">興味・専門分野</h3><div class="split"><div class="field"><label for="student-topic-query" data-i18n="topicSearch">専門分野を検索</label><input id="student-topic-query" class="control" type="search" data-placeholder="topicSearchPlaceholder"></div><div class="field"><label for="student-category" data-i18n="topicCategory">分野ジャンル（任意）</label><select id="student-category" class="control"></select></div></div><div class="small" id="student-topic-count"></div><div id="student-topic-list" class="check-grid"></div><p class="small" data-i18n="multiHint">複数分野を選択できます。異なる分類も組み合わせられます。</p><div class="chips" id="student-topic-selected"></div><div class="field"><label for="student-free-topics" data-i18n="freeTopics">一覧にない専門分野（任意・改行区切り）</label><textarea id="student-free-topics" rows="2" maxlength="400" class="control" data-placeholder="freeTopicsPlaceholder"></textarea></div><hr class="hr"><h3 data-i18n="careerTitle">目指している職業</h3><div class="split"><div class="field"><label for="student-career-query" data-i18n="careerSearch">職業を検索</label><input class="control" type="search" id="student-career-query" data-placeholder="careerSearchPlaceholder"></div><div class="field"><label for="student-career-cat" data-i18n="careerGenre">職業ジャンル（任意）</label><select class="control" id="student-career-cat"></select></div></div><div id="student-career-list" class="check-grid"></div><div class="chips" id="student-career-selected"></div><div class="field"><label for="student-free-careers" data-i18n="freeCareers">一覧にない職業（任意・改行区切り）</label><textarea id="student-free-careers" class="control" rows="2" maxlength="400" data-placeholder="freeCareersPlaceholder"></textarea></div><p class="status" id="student-search-status"></p></div></div>
+<div id="step-4" class="step"><div class="card"><div class="row between"><h2 data-i18n="resultsTitle">先生の検索結果</h2><button type="button" id="redo-search" class="btn secondary sm" data-i18n="editSearch">条件を修正する</button></div><p class="sub" data-i18n="resultsIntro">登録情報との一致に基づく候補です。関連分野だけが一致した場合は区別して表示します。相談できることを保証するものではありません。</p><div id="match-summary" class="muted-box"></div><div id="match-results"></div></div><div id="teams-box" class="card hide"><h2 data-i18n="teamsTitle">Teamsで送る申込文</h2><p class="sub" data-i18n="teamsInfo">このアプリから申込・送信・先生への通知は行われません。文章をコピーして、学校指定のTeamsから先生に送信してください。</p><textarea class="control" id="teams-text" rows="12" readonly></textarea><div class="row" style="margin-top:12px"><button class="btn secondary" type="button" id="teams-copy" data-i18n="copy">文章をコピー</button><span class="status" id="copy-msg"></span></div></div></div>
 </section>
-<section id="home" class="screen"><div class="heading"><h1>ホーム</h1><p id="home-subtitle">ログイン中の画面へ移動できます。</p></div><div class="card"><h2 id="home-title">ようこそ</h2><p class="subtext" id="home-description"></p><p><button class="btn" id="home-primary" type="button">利用する</button></p></div><div class="card"><h2>このアプリでできること</h2><p id="home-role-details" class="small-note"></p></div></section>
-<section id="student" class="screen">
-<div class="heading"><h1>相談したい先生を見つける</h1><p>相談目的を選んだ後、大学進学・大学卒業後の就職では大学情報を登録し、興味分野と目指す職業を選びます。</p></div>
-<div class="progress" aria-label="登録の進行状況"><span id="bar1" class="bar done"></span><span id="bar2" class="bar"></span><span id="bar3" class="bar"></span><span id="bar4" class="bar hide"></span><span class="step-caption" id="progress-caption">1 / 3 基本情報</span></div>
-<div id="student-step-1" class="card step"><div id="runtime-warning" role="alert" style="border:1px solid #e6bd74;background:#fff8e9;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#76521b">この案内が消えない場合、JavaScriptが動作していません。ChatGPTやiPadのファイルプレビューではなく、Safari・Chromeで公開したページ（GitHub Pagesなど）を開いてください。</div>
-<div class="eyebrow" id="step-1-caption">STEP 1 / 3</div><h2>基本情報の登録</h2><p class="subtext">氏名・学年・クラスはIDとひも付けてこのブラウザーに保存します。別の端末では引き継がれません。次回からは同じブラウザーなら自動で読み込みます。新年度の初回アクセス時には更新をお願いする仕様です。※試作版では架空の情報のみ使用してください。</p><div id="year-update-banner" class="small-note hide" role="status">新年度になりました。学年とクラスを更新してから進んでください。</div>
-<div class="field"><label for="student-name">氏名<span class="req">必須</span></label><input id="student-name" class="control" autocomplete="off" maxlength="40" placeholder="例：テスト 太郎（架空）"></div>
-<div class="two"><div class="field"><label for="student-grade">学年<span class="req">必須</span></label><select id="student-grade" class="control"><option value="">選択してください</option><option>中学1年</option><option>中学2年</option><option>中学3年</option><option>高校1年</option><option>高校2年</option><option>高校3年</option></select></div><div class="field"><label for="student-class">クラス<span class="req">必須</span></label><input id="student-class" class="control" autocomplete="off" maxlength="12" placeholder="例：3組 / A組"></div></div>
-<div class="row"><button type="button" id="student-register" class="btn">登録して次へ</button><span id="register-status" role="status" aria-live="polite" class="status"></span></div></div>
-<div id="student-identity" class="identity hide"><div><div class="meta">登録情報（このブラウザー内に保存）</div><div class="name" id="student-identity-label"></div></div><button id="edit-identity" type="button" class="btn muted sm">登録情報を修正</button></div>
-<div id="student-step-2" class="card step hide"><div class="eyebrow" id="step-2-caption">STEP 2 / 3</div><h2>先生に相談したい目的を選択</h2><p class="subtext">同じ分野でも、大学受験対策と将来の職業相談では適切な先生が異なります。</p><div class="choice-grid"><button class="choice" data-purpose="university" type="button"><strong>大学受験</strong><span>学部・学科選び、入試に向けた相談など</span></button><button class="choice" data-purpose="hsjob" type="button"><strong>高校卒業後の就職</strong><span>業界・職種選び、就職に向けた相談</span></button><button class="choice" data-purpose="gradjob" type="button"><strong>大学卒業後の就職</strong><span>将来の仕事、業界や必要な知識・資格の相談</span></button></div></div>
-<div id="student-step-university" class="card step hide">
- <div class="eyebrow">STEP 3 / 4</div>
- <h2 id="university-step-heading">大学・学部・学科の情報</h2>
- <p class="subtext">進学を希望している、または将来在籍する予定の大学について、現在わかっている範囲で教えてください。決まっていない項目はそれぞれ「未定」を選べます。※試作中は架空の情報のみ入力してください。</p>
- <div class="field"><label for="university-name">大学名</label><div class="university-field-row"><input class="control" id="university-name" maxlength="70" autocomplete="off" placeholder="例：○○大学"><label class="university-undecided"><input type="checkbox" id="university-name-undecided" checked> 未定</label></div></div>
- <div class="field"><label for="university-faculty">学部</label><div class="university-field-row"><input class="control" id="university-faculty" maxlength="70" autocomplete="off" placeholder="例：芸術学部"><label class="university-undecided"><input type="checkbox" id="university-faculty-undecided" checked> 未定</label></div></div>
- <div class="field"><label for="university-department">学科</label><div class="university-field-row"><input class="control" id="university-department" maxlength="70" autocomplete="off" placeholder="例：演劇学科"><label class="university-undecided"><input type="checkbox" id="university-department-undecided" checked> 未定</label></div></div>
- <div class="row"><button id="save-university" class="btn" type="button">この内容で次へ</button><span id="university-status" class="status" role="status" aria-live="polite"></span></div>
-</div>
-<div id="student-step-3" class="step hide"><div class="card"><div class="eyebrow" id="step-3-caption">STEP 3 / 3</div><h2>興味分野・目指す職業を選ぶ</h2>
-<p class="subtext">分野名から直接選ぶか、目指す職業から探せます。どちらか一方だけでも、両方を組み合わせても検索できます。</p>
-<div class="row"><span class="tag" id="purpose-label"></span><button class="btn secondary sm" id="change-purpose" type="button">目的を変更</button><button class="btn muted sm hide" id="change-university" type="button">大学情報を修正</button></div><div id="university-summary" class="small-note hide" style="margin-top:12px"></div>
-<div class="divider"></div>
-<div class="minor-title">興味・専門分野から探す</div>
-<p class="hint">学問の大分類・中分類を選ぶ必要はありません。分野名で検索し、当てはまるものを複数選んでください。</p>
-<div class="field"><label for="student-topic-search">専門分野を検索</label><input id="student-topic-search" class="control" type="search" placeholder="例：演技、心理学、公共政策、デザイン" autocomplete="off"></div>
-<div class="catalog-count" id="student-topic-hits" aria-live="polite"></div>
-<div id="student-topic-list" class="checks scroll-checks" aria-label="専門分野一覧"></div>
-<details class="catalog-more"><summary>資格・検定からも探す（任意）</summary><div class="field"><label for="student-qualification-search">資格・検定を検索</label><input id="student-qualification-search" class="control" type="search" placeholder="例：簿記、英検、情報技術"></div><div id="student-qualification-list" class="checks scroll-checks"></div><p class="hint">取得していなくても、相談したい資格・検定を選べます。</p></details>
-<div class="other-area"><label class="check other-toggle"><input id="student-other-topics-toggle" type="checkbox"><span>その他（選択肢にない専門分野を自由記入）</span></label><div id="student-other-topics-wrap" class="hide field"><label for="student-other-topics">専門分野の自由記入</label><textarea id="student-other-topics" class="control" rows="2" maxlength="300" placeholder="例：アニメ音響、地域福祉（複数の場合は改行で区切る）"></textarea></div></div>
-<div class="divider"></div>
-<div class="minor-title">目指している職業から探す <span class="muted" style="font-weight:400;font-size:12px">（分野と併用可）</span></div>
-<p class="hint">職業ジャンルと職業の分野から、目指す仕事を選んでください。複数選択できます。</p>
-<div class="two"><div class="field"><label for="student-career-category">職業ジャンル</label><select id="student-career-category" class="control"></select></div><div class="field"><label for="student-career-subcategory">職業の分野</label><select id="student-career-subcategory" class="control"></select></div></div>
-<div id="student-career-list" class="checks"></div>
-<div class="other-area"><label class="check other-toggle"><input id="student-other-careers-toggle" type="checkbox"><span>その他（選択肢にない職業を自由記入）</span></label><div id="student-other-careers-wrap" class="hide field"><label for="student-other-careers">目指す職業の自由記入</label><textarea id="student-other-careers" class="control" rows="2" maxlength="300" placeholder="例：映像音響エンジニア（複数の場合は改行で区切る）"></textarea></div></div>
-<p class="hint">自由記入は先生の登録情報と一致した場合のみ自動照合します。一致しない内容も申込文に反映できます。</p>
-<div class="minor-title">選択済みの職業 <span id="student-career-count" class="muted">0件</span></div><div id="student-career-selected" class="tagbox"></div>
-<div class="divider"></div><div class="minor-title">選択済みの分野・資格 <span id="student-selection-count" class="muted">0件</span></div><div id="student-selections" class="tagbox"><span class="muted">まだ選択されていません。</span></div>
-<div class="row"><button type="button" class="btn" id="find-teachers">この条件で先生を探す</button><span id="search-status" class="status" role="status"></span></div></div>
-<div id="matches-card" class="card hide"><h2>おすすめの先生</h2><p class="subtext">相談目的・興味分野・職業を照合します。「その他」は登録済みの分野名・職業名と一致する場合に照合します。先生の公開登録情報も確認できます。推薦順は指導力の評価ではありません。</p><div id="matches"></div><p id="consult-feedback" role="status" aria-live="polite" class="status"></p><div class="small-note">申込文はコピーして学校指定のTeamsで先生に直接送信してください。アプリ内での個別チャット・先生への自動送信はありません。予定は先生との返信で確定します。</div>
-<div class="divider"></div>
-<div id="teams-template-box" class="hide" aria-live="polite">
- <h2>Teamsで送る相談申込文</h2>
- <p class="subtext" id="teams-target"></p>
- <label class="field-title" for="teams-template">コピーしてTeamsに貼り付けてください</label>
- <textarea class="control text-template" id="teams-template" rows="13" readonly></textarea>
- <div class="row" style="margin-top:12px"><button type="button" class="btn secondary" id="copy-teams">文面をコピー</button><span class="status" id="copy-status" role="status"></span></div>
- <p class="small-note" style="margin-top:14px"><strong>注意：</strong>送信前に内容を確認し、必要な相談の詳細を追記してください。氏名や学年等は入力済みの架空データ（自由記入欄を含む）を反映します。Teamsへの自動送信は行いません。</p>
-</div></div>
-</section>
-<section id="teacher" class="screen"><div class="heading"><h1>先生の相談申込・対応分野</h1><p>先生は対応分野・相談できる職業・公開可能な専門情報を詳しく登録できます。生徒側では分野名から直接探せます。</p></div><div class="card"><h2>端末内申込デモの履歴（参考機能）</h2><p class="subtext">生徒画面で申し込んだ内容を、このブラウザー内だけで確認できます。ほかの端末の先生には届きません。本番では教員認証と共有データベースが必要です。</p><div class="field hide" id="inbox-selector-box"><label for="inbox-teacher">申込を確認する先生</label><select class="control" id="inbox-teacher" disabled></select></div><p class="teacher-only" id="teacher-account-label"></p><div class="row"><span class="status" id="inbox-count" aria-live="polite"></span><button type="button" class="btn muted sm" id="refresh-inbox">一覧を更新</button></div><div id="inbox-list"></div></div><div class="teacher-grid"><div><div class="card"><h2>担当分野の登録・更新（架空データ）</h2><p class="subtext">ログイン中の先生の情報を更新します。実在する先生の情報は入力しないでください。</p><div class="field"><label for="teacher-name">表示名</label><input id="teacher-name" class="control" maxlength="40" placeholder="例：経済担当A先生（架空）"></div><div class="field"><div class="field-title">対応できる相談目的</div><div class="checks"><label class="check"><input type="checkbox" value="university" name="teacher-purpose">大学受験</label><label class="check"><input type="checkbox" value="hsjob" name="teacher-purpose">高校卒業後の就職</label><label class="check"><input type="checkbox" value="gradjob" name="teacher-purpose">大学卒業後の就職</label></div></div><div class="field"><label for="teacher-category">大分類</label><select id="teacher-category" class="control"></select></div><div id="teacher-topic-panel" class="hide"><div class="field"><label for="teacher-subcategory">中分類</label><select id="teacher-subcategory" class="control"></select></div><div id="teacher-details" class="hide"><div class="minor-title">対応できる詳細分野</div><div class="checks" id="teacher-topic-list"></div></div><div class="minor-title">対応できる資格・検定</div><div class="checks" id="teacher-qualification-list"></div></div><div class="divider"></div>
-<div class="minor-title">相談に対応できる職業</div>
-<p class="hint">専門分野に加えて、具体的な職業の相談にも対応できる場合に選択してください（任意・複数可）。</p>
-<div class="two"><div class="field"><label for="teacher-career-category">職業ジャンル</label><select id="teacher-career-category" class="control"></select></div><div class="field"><label for="teacher-career-subcategory">職業の分野</label><select id="teacher-career-subcategory" class="control"></select></div></div>
-<div id="teacher-career-list" class="checks"></div>
-<div class="minor-title">対応できる職業</div><div id="teacher-career-selected" class="tagbox"></div>
-<div class="minor-title">選択済みの専門分野</div><div class="tagbox" id="teacher-selections"><span class="muted">まだ選択されていません。</span></div>
-<div class="teacher-public-fields"><div class="minor-title">生徒に公開する詳細情報</div>
-<p class="hint">登録した内容は、マッチした生徒の先生紹介画面に表示されます。連絡先や非公開情報、個人情報は入力しないでください。</p>
-<div class="field"><label for="teacher-extra-topics">選択肢以外の専門分野（1行に1つ、最大16件）</label><textarea id="teacher-extra-topics" class="control" rows="3" maxlength="400" placeholder="例：アニメ音響
-地域福祉"></textarea></div>
-<div class="field"><label for="teacher-extra-careers">上の選択肢にない相談可能な職業（1行に1つ）</label><textarea id="teacher-extra-careers" class="control" rows="2" maxlength="400" placeholder="例：映像音響エンジニア"></textarea></div>
-<div class="field"><label for="teacher-strong-topics">特に相談に乗れるテーマ（任意）</label><textarea id="teacher-strong-topics" class="control" rows="3" maxlength="400" placeholder="例：演劇系大学の学び、発声や舞台制作など"></textarea></div>
-<div class="field"><label for="teacher-consult-areas">具体的に相談できること（任意）</label><textarea id="teacher-consult-areas" class="control" rows="3" maxlength="400" placeholder="例：学部の違い、卒業後の進路、必要な資格など"></textarea></div>
-<div class="field"><label for="teacher-public-experience">公開できる経験・資格等（任意）</label><textarea id="teacher-public-experience" class="control" rows="3" maxlength="400" placeholder="例：学校で指導してきた分野や公開可能な経験"></textarea></div></div>
-<div class="field"><label for="teacher-note">紹介文（任意）</label><textarea id="teacher-note" class="control" rows="3" maxlength="180" placeholder="相談できる内容の補足など"></textarea></div><div class="row"><button class="btn" id="teacher-save" type="button">担当分野を保存する</button><span class="status" role="status" id="teacher-status"></span></div></div></div><div><div class="card" id="teacher-catalog-card">
- <h2>専門分野・資格を新しく追加する</h2>
- <p class="subtext">先生は申請・承認なしで追加できます。追加した項目は、この試作データ内で他の先生・生徒にもすぐ表示されます。追加された項目を担当分野として使う場合は、上の選択欄から選び「担当分野を保存する」を押してください。</p>
- <div class="field"><label for="teacher-add-type">追加する項目</label><select id="teacher-add-type" class="control"><option value="category">大分類</option><option value="subcategory">中分類</option><option value="topic">詳細分野</option><option value="qualification">資格・検定</option></select></div>
- <div class="field hide" id="teacher-add-group-field"><label for="teacher-add-category">追加先の大分類</label><select id="teacher-add-category" class="control"></select></div>
- <div class="field hide" id="teacher-add-sub-field"><label for="teacher-add-subcategory">追加先の中分類</label><select id="teacher-add-subcategory" class="control"></select></div>
- <div class="field"><label for="teacher-add-name">新しい項目名</label><input id="teacher-add-name" class="control" maxlength="70" placeholder="例：行動経済学"></div>
- <div class="row"><button class="btn" id="teacher-add-submit" type="button">承認なしで追加する</button><span class="status" id="teacher-add-status" role="status"></span></div>
- <div class="divider"></div>
- <h2>誤って追加した項目の削除申請</h2>
- <p class="subtext">自分が追加した項目だけ申請できます。申請だけでは削除されず、管理者が確認・承認した場合のみ削除されます。削除された項目は先生や生徒の選択肢からも消えます。</p>
- <div class="field"><label for="teacher-delete-target">削除を希望する項目</label><select id="teacher-delete-target" class="control"></select></div>
- <div class="row"><button id="teacher-delete-submit" type="button" class="btn secondary">削除を申請する</button><span class="status" id="teacher-delete-status" role="status"></span></div>
- <div id="teacher-pending-deletions" class="hint"></div>
- </div><div class="card"><h2>現在ログイン中の先生</h2><p class="subtext">登録した対応分野を確認できます。</p><div id="teacher-list"></div></div></div></div></section>
-<section id="admin" class="screen"><div class="heading"><h1>分類・資格・検定の管理</h1><p>コードを編集せずに大分類・中分類・詳細分野・資格を追加できます。</p></div><div class="stats" id="stats"></div><div class="admin-layout"><div><div class="card"><h2>項目を追加する</h2><p class="subtext">複数追加したい場合は、項目名を1行に1つずつ入力してください。</p><div class="field"><label for="admin-type">追加する階層</label><select id="admin-type" class="control"><option value="category">大分類</option><option value="subcategory">中分類</option><option value="topic">詳細分野</option><option value="qualification">資格・検定</option></select></div><div id="admin-group-field" class="field hide"><label for="admin-category">追加先の大分類</label><select id="admin-category" class="control"></select></div><div id="admin-sub-field" class="field hide"><label for="admin-subcategory">追加先の中分類</label><select id="admin-subcategory" class="control"></select></div><div class="field"><label for="admin-names">追加したい項目名（改行区切り可）</label><textarea id="admin-names" class="control" rows="5" placeholder="例：\n労働経済学\n国際経済学"></textarea></div><div class="row"><button id="admin-add" type="button" class="btn">項目を登録</button><span id="admin-status" role="status" class="status"></span></div><div class="divider"></div><h2>先生からの削除申請</h2><div id="delete-requests"></div></div></div><div><div class="card"><h2>登録されている分類</h2><div class="field"><label for="admin-preview">大分類を表示</label><select id="admin-preview" class="control"></select></div><div id="catalog-preview"></div></div><div class="card"><h2>生徒IDの発行（デモ）</h2><p class="subtext">生徒を区別するための重複しないIDを発行します。個人アカウントの作成や本人認証ではありません。番号は発行済みのものを再利用しません（このブラウザー内に限ります）。</p><label class="field-title" for="student-id-count">発行する人数</label><select id="student-id-count" class="control"><option value="1">1人</option><option value="5">5人</option><option value="10">10人</option></select><p><button id="admin-create-students" class="btn secondary" type="button">生徒IDを発行する</button></p><p id="student-id-result" class="status" aria-live="polite"></p><div id="admin-student-ids" class="hint"></div></div><div class="card"><h2>先生IDの発行（デモ）</h2><p class="subtext">試作版のため、架空の先生だけを追加してください。</p><label class="field-title" for="new-teacher-name">新しい先生の表示名</label><input id="new-teacher-name" class="control" maxlength="40" placeholder="例：新任G先生（架空）"><p><button class="btn secondary" id="admin-create-teacher" type="button">先生IDを発行</button></p><p class="status" id="admin-account-status"></p><div id="admin-teacher-ids" class="hint"></div></div><div class="card"><h2>データと安全性について</h2><p class="subtext">この画面はデモのため、誰でも管理できます。実運用では学校管理者への権限制限、ユーザー認証、学校単位のデータ分離、通信・保存データの保護、監査が必要です。</p><button id="reset" type="button" class="btn danger sm">デモの分類・先生・申込を初期化</button></div></div></div></section>
-</main><footer class="footer">教員マッチングアプリ（仮） / 比較試作版 A v0.8.0 — 非AI・ブラウザー内で動作するデモ</footer>
+<section id="teacher" class="screen"><h1 data-i18n="teacherTitle">先生の登録情報</h1><p class="sub" data-i18n="teacherIntro">対応できる分野と学習歴を区別して登録できます。別の大分類の専門分野も複数選択できます。</p><div class="muted-box" data-i18n="teacherNoInbox">相談申込はこのアプリでは受信・保存しません。生徒はTeamsで直接連絡します。</div>
+<div class="teacher-layout"><div>
+<div class="card"><h2 data-i18n="teacherProfile">基本情報・対応範囲</h2><div class="field"><label for="teacher-name" data-i18n="displayName">表示名</label><input id="teacher-name" class="control" maxlength="60"></div><div class="field"><label for="teacher-name-en" data-i18n="displayNameEn">英語の表示名（任意）</label><input id="teacher-name-en" class="control" maxlength="60"></div><div class="field"><label class="label" data-i18n="purposes">対応できる相談目的（複数選択）</label><div id="teacher-purpose-list" class="check-grid"></div></div><div class="field"><label for="teacher-about" data-i18n="teacherAbout">紹介文（生徒に表示）</label><textarea id="teacher-about" class="control" rows="3" maxlength="300"></textarea></div><div class="field"><label for="teacher-public" data-i18n="teacherPublic">公開できる経験や資格（任意）</label><textarea id="teacher-public" class="control" rows="3" maxlength="400"></textarea></div></div>
+<div class="card"><h2 data-i18n="teacherTopics">相談対応できる専門分野・職業</h2><p class="sub" data-i18n="teacherTopicsInfo">複数の大分類を横断して選択できます。選択内容は保存されます。</p><div class="split"><div class="field"><label for="teacher-topic-query" data-i18n="topicSearch">専門分野を検索</label><input id="teacher-topic-query" type="search" class="control" data-placeholder="topicSearchPlaceholder"></div><div class="field"><label for="teacher-category" data-i18n="topicCategory">分野ジャンル（任意）</label><select id="teacher-category" class="control"></select></div></div><div id="teacher-topic-count" class="small"></div><div class="check-grid" id="teacher-topic-list"></div><p class="small" data-i18n="teacherTopicHint">チェックを付けた分野は、異なるジャンルへ移動しても保持されます。</p><div class="chips" id="teacher-topic-selected"></div><div class="split"><div class="field"><label for="teacher-career-query" data-i18n="careerSearch">職業を検索</label><input id="teacher-career-query" class="control" data-placeholder="careerSearchPlaceholder"></div><div class="field"><label for="teacher-career-cat" data-i18n="careerGenre">職業ジャンル（任意）</label><select id="teacher-career-cat" class="control"></select></div></div><div id="teacher-career-list" class="check-grid"></div><div class="chips" id="teacher-career-selected"></div><div class="field"><label for="teacher-free-topics" data-i18n="freeTopics">一覧にない専門分野（任意・改行区切り）</label><textarea id="teacher-free-topics" class="control" rows="2" maxlength="400" data-placeholder="freeTopicsPlaceholder"></textarea></div><div class="field"><label for="teacher-free-careers" data-i18n="freeCareers">一覧にない職業（任意・改行区切り）</label><textarea id="teacher-free-careers" class="control" rows="2" maxlength="400" data-placeholder="freeCareersPlaceholder"></textarea></div><button class="btn" type="button" id="teacher-save" data-i18n="saveProfile">この内容を保存する</button><span id="teacher-save-msg" class="status"></span></div>
+<div class="card"><h2 data-i18n="schoolHistoryTitle">大学で学んだ専攻・学習歴</h2><p class="sub" data-i18n="schoolHistoryHelp">以前の専攻、卒業時の専攻、二重専攻、副専攻、履修経験を分けて記録できます。学んだ経験だけで相談対応を保証するものではありません。</p><div id="history-list"></div><h3 data-i18n="addHistory">学習歴を追加</h3><div class="split"><div class="field"><label for="history-university" data-i18n="uniName">大学</label><input class="control" id="history-university" maxlength="80"></div><div class="field"><label for="history-major" data-i18n="majorField">学んだ分野・専攻</label><input class="control" id="history-major" maxlength="100"></div></div><div class="split"><div class="field"><label for="history-type" data-i18n="studyType">学習歴の種類</label><select class="control" id="history-type"></select></div><div class="field"><label for="history-note" data-i18n="historyNote">補足（任意）</label><input class="control" id="history-note" maxlength="100"></div></div><button class="btn secondary" type="button" id="history-add" data-i18n="addButton">追加する</button><span class="status" id="history-msg"></span></div>
+</div><div>
+<div class="card"><h2 data-i18n="uniSupportTitle">相談に対応できる大学・学部・学科</h2><p class="sub" data-i18n="uniSupportInfo">単なる卒業・在学経験とは区別して、現在相談できる大学情報を登録してください。大学・学部・学科のうち、対応できる範囲だけ入力できます。</p><div id="teacher-uni-list"></div><div class="split"><div class="field"><label for="support-uni" data-i18n="uniName">大学名</label><input id="support-uni" class="control" maxlength="80"></div><div class="field"><label for="support-fac" data-i18n="faculty">学部・学群</label><input id="support-fac" class="control" maxlength="80"></div><div class="field"><label for="support-dep" data-i18n="department">学科・専攻</label><input id="support-dep" class="control" maxlength="80"></div><div class="field"><label for="support-kind" data-i18n="supportKind">相談できる内容</label><select id="support-kind" class="control"></select></div><div class="field"><label for="support-source" data-i18n="experienceSource">知識の根拠</label><select id="support-source" class="control"></select></div><div class="field"><label for="support-year" data-i18n="checkedYear">確認した年（任意）</label><input id="support-year" class="control" type="number" min="1990" max="2100" placeholder="2026"></div></div><button class="btn secondary" id="support-add" type="button" data-i18n="addButton">追加する</button><p class="status" id="support-msg"></p></div>
+<div class="card"><h2 data-i18n="catalogAddTitle">専門分野・資格・分類の追加</h2><p class="sub" data-i18n="catalogAddHelp">不足している項目を追加できます。同じブラウザー内の生徒・先生の選択肢にも反映されます。実運用には共有データベースが必要です。</p><div class="field"><label for="catalog-kind" data-i18n="addKind">追加する項目</label><select id="catalog-kind" class="control"></select></div><div id="catalog-add-category-box" class="field"><label for="catalog-parent" data-i18n="category">大分類</label><select id="catalog-parent" class="control"></select></div><div id="catalog-add-sub-box" class="field"><label for="catalog-sub" data-i18n="subcategory">中分類</label><select class="control" id="catalog-sub"></select></div><div class="split"><div class="field"><label for="catalog-ja" data-i18n="nameJa">日本語の項目名</label><input id="catalog-ja" class="control" maxlength="80"></div><div class="field"><label for="catalog-en" data-i18n="nameEn">英語の項目名（任意）</label><input id="catalog-en" class="control" maxlength="80"></div></div><p class="small" data-i18n="otherCategoryHelp">追加した専門分野は、必要に応じて管理者が複数分類に紐づけられます。</p><button class="btn secondary" id="catalog-add" type="button" data-i18n="catalogAddBtn">項目を追加する</button><p class="status" id="catalog-msg"></p><hr class="hr"><h3 data-i18n="ownAdditions">自分が追加した項目</h3><p class="small" data-i18n="deleteApproval">削除は管理者に申請し、承認されると実行されます。</p><div id="my-additions"></div></div>
+<div id="teacher-schedule-card" class="card"><h2 data-i18n="scheduleManageTitle">相談可能な予定表（B版のみ）</h2><p class="sub" data-i18n="scheduleManageInfo">○＝相談可能、△＝要確認、×＝不可。各マスを押すと状態が切り替わります。端末内デモのため他端末とは同期しません。</p><div id="teacher-schedule"></div></div>
+</div></div></section>
+<section id="admin" class="screen"><h1 data-i18n="adminTitle">管理画面（デモ）</h1><p class="sub" data-i18n="adminDesc">分類・先生IDの管理と、先生からの項目削除申請を確認します。</p><div class="split"><div class="card"><h2 data-i18n="pendingDelete">削除の承認待ち</h2><div id="admin-deletions"></div></div><div class="card"><h2 data-i18n="accountsTitle">テスト用アカウントを追加</h2><div class="field"><label for="admin-teacher-name" data-i18n="displayName">表示名</label><input class="control" id="admin-teacher-name" maxlength="60"></div><button class="btn secondary" id="admin-create-teacher" data-i18n="createTeacher">先生IDを作成</button><p id="admin-teacher-msg" class="status"></p><button class="btn secondary" id="admin-create-student" data-i18n="createStudent">生徒IDを作成</button><p id="admin-student-msg" class="status"></p></div></div><div class="card"><h2 data-i18n="adminInfoTitle">登録データの概要</h2><div id="admin-counts"></div><p class="small" data-i18n="adminWarning">この画面のIDはアクセス制御ではありません。学校での公開に使用しないでください。</p></div></section>
+</main>
+<nav id="bottom-nav" class="bottom hide" aria-label="navigation"><button type="button" class="btn" id="nav-back" data-i18n="back">← 戻る</button><button type="button" class="btn" id="nav-home" data-i18n="home">⌂ ホーム</button><button type="button" class="btn primary" id="nav-next" data-i18n="next">進む →</button></nav>
+<div class="footer" id="footer"></div>
 <script>
 'use strict';
-// 大分類 → 中分類 → 詳細分野 ＋ その大分類に関連する資格・検定。
-// すべて表示用の例示データです。正式な学問分類・資格一覧ではありません。
-const SEED_CATALOG={
- '文学':{sub:{'文学研究':['日本文学','英米文学','比較文学','文芸創作'],'言語・文化':['日本語学','言語学','文化研究','翻訳研究']},quals:['日本語検定','日本漢字能力検定','実用英語技能検定']},
- '経営':{sub:{'経営理論':['経営戦略論','組織論','マーケティング','人的資源管理'],'会計・ファイナンス':['財務会計','管理会計','企業財務','経営分析']},quals:['日商簿記検定3級','日商簿記検定2級','日商簿記検定1級','ビジネス会計検定試験','中小企業診断士']},
- '芸術':{sub:{'舞台・演劇':['演技','舞台演出','舞台制作','声優・ナレーション'],'音楽':['音楽理論','演奏','作曲','音響'],'映像・美術':['映像制作','デザイン','美術史','舞台美術']},quals:['色彩検定','舞台機構調整技能検定']},
- '経済':{sub:{'基礎理論':['ミクロ経済学','マクロ経済学','ゲーム理論'],'実証・分析手法':['計量経済学','統計分析','経済データ分析'],'応用経済':['国際経済学','労働経済学','公共経済学','金融論']},quals:['日商簿記検定3級','日商簿記検定2級','日商簿記検定1級','全経簿記能力検定','統計検定3級','統計検定2級','統計検定準1級','ファイナンシャル・プランニング技能検定3級','ファイナンシャル・プランニング技能検定2級','ビジネス会計検定試験']},
- '理工':{sub:{'情報・計算':['プログラミング','人工知能','データサイエンス','情報セキュリティ'],'数理・物理':['数学','応用数学','物理学'],'工学':['機械工学','電気電子工学','建築学']},quals:['ITパスポート試験','基本情報技術者試験','応用情報技術者試験','統計検定2級','第二種電気工事士']},
- '教育':{sub:{'教育理論':['教育心理学','教育哲学','教育社会学'],'教育実践':['初等教育','特別支援教育','教育方法論']},quals:['教員免許状','保育士']},
- '法・政治':{sub:{'法律学':['民法','刑法','憲法','商法'],'政治・行政':['政治学','行政学','国際関係論']},quals:['行政書士','司法書士','宅地建物取引士']},
- '医療・福祉':{sub:{'医療・健康':['医学','看護学','公衆衛生学'],'社会福祉':['社会福祉学','介護福祉学','福祉政策']},quals:['看護師','社会福祉士','介護福祉士']}
-};
-
-// v0.8：先生の登録用の階層は維持し、生徒には分野名をフラットに表示する。
-// 新規登録データの不足を補うサンプル項目（正式な学問分類ではありません）。
-const EXTRA_SEED_TOPICS = {
- '文学':{'文学研究':['児童文学','文学批評','出版文化'],'言語・文化':['英語学','中国語学','韓国語学','異文化コミュニケーション','日本語教育','通訳','日本文化','歴史学','哲学','倫理学']},
- '経営':{'経営理論':['起業','商品企画','事業開発','ブランド戦略','広告','広報','プロジェクトマネジメント','観光経営'],'会計・ファイナンス':['税務','金融商品','投資・資産運用','リスク管理']},
- '芸術':{'舞台・演劇':['脚本','演劇教育','朗読','ナレーション','アニメーション演技','舞台音響','舞台照明','ミュージカル','ダンス','振付'],'音楽':['声楽','ドラム','吹奏楽','DTM','レコーディング','音楽ビジネス'],'映像・美術':['写真','アニメーション制作','ゲームデザイン','グラフィックデザイン','UXデザイン','美術教育','映像編集']},
- '経済':{'応用経済':['地域経済','環境経済学','行動経済学','社会保障','財政学'],'実証・分析手法':['アンケート調査','ビッグデータ分析']},
- '理工':{'情報・計算':['Webアプリ開発','ネットワーク','機械学習','情報デザイン','クラウド'],'数理・物理':['化学','生物学','地学','気象学','宇宙科学','統計学'],'工学':['都市計画','土木工学','ロボット工学','環境工学','材料工学']},
- '教育':{'教育実践':['進路指導','学校経営','幼児教育','ICT教育','探究学習','部活動指導'],'教育理論':['発達心理学','学習心理学','カウンセリング']},
- '法・政治':{'法律学':['労働法','知的財産法','国際法','消費者法'],'政治・行政':['地方自治','公共政策','公務員試験','国際政治','外交','防災政策']},
- '医療・福祉':{'医療・健康':['薬学','栄養学','理学療法','作業療法','心理支援','スポーツ医学'],'社会福祉':['児童福祉','高齢者福祉','障害者福祉','地域福祉']},
- '観光・サービス':{'観光・宿泊':['観光学','旅行企画','ホテル運営','地域観光'],'接客・生活':['接客サービス','調理','製菓','美容','ファッション']},
- '交通・インフラ':{'交通・物流':['鉄道','航空','海運','物流','自動車整備'],'基盤・環境':['エネルギー','電力','水道','環境保全','防災']},
- '農業・食':{'生物・生産':['農学','園芸','水産学','食品科学','畜産'],'食・流通':['食品衛生','食品開発','食育','農業経営']},
- 'スポーツ':{'競技・指導':['スポーツ指導','スポーツ心理','運動生理学','スポーツマネジメント','リハビリテーション']},
- '国際・社会':{'国際':['国際協力','国際開発','多文化共生','海外留学'],'社会':['社会学','社会調査','ジェンダー研究','地域づくり','メディア研究','ジャーナリズム']}
-};
-function migrateCatalogV08(){
- if(db.catalogMigrationV08)return;
- for(const [group, subsByName] of Object.entries(EXTRA_SEED_TOPICS)){
-  if(!Object.prototype.hasOwnProperty.call(db.catalog,group))db.catalog[group]={sub:{},quals:[]};
-  for(const [sub,topics] of Object.entries(subsByName)){
-   if(!Object.prototype.hasOwnProperty.call(db.catalog[group].sub,sub))db.catalog[group].sub[sub]=[];
-   for(const topic of topics)if(!db.catalog[group].sub[sub].includes(topic))db.catalog[group].sub[sub].push(topic);
-  }
- }
- db.catalogMigrationV08=true;
-}
-
-const SEED_TEACHERS=[
- {id:'demo-a',name:'経済担当A先生（架空）',purposes:['university'],keys:['topic|経済|基礎理論|ミクロ経済学','topic|経済|基礎理論|マクロ経済学','topic|経済|基礎理論|ゲーム理論'],note:'経済分野の大学受験・学びに関する相談に対応。'},
- {id:'demo-b',name:'統計担当B先生（架空）',purposes:['university','gradjob'],keys:['topic|経済|実証・分析手法|計量経済学','topic|経済|実証・分析手法|統計分析','qual|経済|統計検定2級','topic|理工|情報・計算|データサイエンス'],note:'統計・データ分析分野の相談に対応。'},
- {id:'demo-c',name:'会計担当C先生（架空）',purposes:['hsjob','gradjob','university'],keys:['qual|経済|日商簿記検定3級','qual|経済|日商簿記検定2級','qual|経済|日商簿記検定1級','topic|経営|会計・ファイナンス|財務会計'],note:'会計・簿記の学習や進路について相談可能。'},
- {id:'demo-d',name:'舞台担当D先生（架空）',purposes:['university','gradjob'],keys:['topic|芸術|舞台・演劇|演技','topic|芸術|舞台・演劇|舞台演出','topic|芸術|舞台・演劇|声優・ナレーション'],note:'芸術・舞台領域の進学や将来について相談可能。'},
- {id:'demo-e',name:'情報担当E先生（架空）',purposes:['university','hsjob','gradjob'],keys:['topic|理工|情報・計算|プログラミング','topic|理工|情報・計算|情報セキュリティ','qual|理工|ITパスポート試験'],note:'情報系の進学・職業・資格について相談可能。'},
- {id:'demo-f',name:'文学担当F先生（架空）',purposes:['university'],keys:['topic|文学|文学研究|日本文学','topic|文学|文学研究|比較文学'],note:'文学・文系学部の進学相談に対応。'}
-];
-// 選択肢は試作用の例であり、公式の職業分類ではありません。
-const CAREER_CATALOG = {
- "公務員・公共": {
-  "行政・公共政策": [
-   "国家公務員（行政職）",
-   "地方公務員（行政職）",
-   "国家公務員（専門職）"
-  ],
-  "公安・防災": [
-   "警察官",
-   "消防士"
-  ]
- },
- "教育・保育": {
-  "教育・保育": [
-   "学校教員",
-   "特別支援学校教員",
-   "保育士"
-  ]
- },
- "芸術・エンタメ": {
-  "舞台・音声": [
-   "声優",
-   "俳優",
-   "舞台演出家"
-  ],
-  "音楽・映像": [
-   "音楽家",
-   "映像制作者",
-   "デザイナー"
-  ]
- },
- "ビジネス・金融": {
-  "経営・企画": [
-   "経営者",
-   "マーケター"
-  ],
-  "会計・金融": [
-   "公認会計士",
-   "税理士",
-   "金融アナリスト"
-  ]
- },
- "IT・理工": {
-  "情報技術": [
-   "プログラマー",
-   "データサイエンティスト",
-   "情報セキュリティ技術者"
-  ],
-  "ものづくり": [
-   "建築士",
-   "機械エンジニア"
-  ]
- },
- "医療・福祉": {
-  "医療": [
-   "医師",
-   "看護師"
-  ],
-  "福祉": [
-   "社会福祉士"
-  ]
- },
- "文学・言語": {
-  "言語・出版": [
-   "翻訳者",
-   "編集者"
-  ]
- }
-};
-const CAREER_RELATED_KEYS = {
- "国家公務員（行政職）": [
-  "topic|法・政治|政治・行政|行政学",
-  "topic|法・政治|政治・行政|政治学",
-  "topic|経済|応用経済|公共経済学"
- ],
- "地方公務員（行政職）": [
-  "topic|法・政治|政治・行政|行政学",
-  "topic|経済|応用経済|公共経済学"
- ],
- "国家公務員（専門職）": [
-  "topic|法・政治|政治・行政|行政学"
- ],
- "警察官": [
-  "topic|法・政治|法律学|刑法"
- ],
- "消防士": [
-  "topic|医療・福祉|医療・健康|公衆衛生学"
- ],
- "学校教員": [
-  "topic|教育|教育実践|教育方法論",
-  "topic|教育|教育実践|初等教育",
-  "qual|教育|教員免許状"
- ],
- "特別支援学校教員": [
-  "topic|教育|教育実践|特別支援教育"
- ],
- "保育士": [
-  "qual|教育|保育士"
- ],
- "声優": [
-  "topic|芸術|舞台・演劇|声優・ナレーション",
-  "topic|芸術|舞台・演劇|演技"
- ],
- "俳優": [
-  "topic|芸術|舞台・演劇|演技"
- ],
- "舞台演出家": [
-  "topic|芸術|舞台・演劇|舞台演出"
- ],
- "音楽家": [
-  "topic|芸術|音楽|演奏"
- ],
- "映像制作者": [
-  "topic|芸術|映像・美術|映像制作"
- ],
- "デザイナー": [
-  "topic|芸術|映像・美術|デザイン"
- ],
- "経営者": [
-  "topic|経営|経営理論|経営戦略論"
- ],
- "マーケター": [
-  "topic|経営|経営理論|マーケティング"
- ],
- "公認会計士": [
-  "topic|経営|会計・ファイナンス|財務会計",
-  "qual|経営|日商簿記検定1級"
- ],
- "税理士": [
-  "topic|経営|会計・ファイナンス|財務会計",
-  "qual|経済|日商簿記検定2級"
- ],
- "金融アナリスト": [
-  "topic|経済|応用経済|金融論"
- ],
- "プログラマー": [
-  "topic|理工|情報・計算|プログラミング"
- ],
- "データサイエンティスト": [
-  "topic|理工|情報・計算|データサイエンス",
-  "topic|経済|実証・分析手法|統計分析"
- ],
- "情報セキュリティ技術者": [
-  "topic|理工|情報・計算|情報セキュリティ"
- ],
- "建築士": [
-  "topic|理工|工学|建築学"
- ],
- "機械エンジニア": [
-  "topic|理工|工学|機械工学"
- ],
- "医師": [
-  "topic|医療・福祉|医療・健康|医学"
- ],
- "看護師": [
-  "topic|医療・福祉|医療・健康|看護学"
- ],
- "社会福祉士": [
-  "topic|医療・福祉|社会福祉|社会福祉学"
- ],
- "翻訳者": [
-  "topic|文学|言語・文化|翻訳研究"
- ],
- "編集者": [
-  "topic|文学|文学研究|文芸創作"
- ]
-};
-
-// v0.8：学校内で候補を検証するための例示職業。教員が対応を登録したものだけ直接一致とする。
-const EXTRA_CAREER_CATALOG={
- '公務員・公共':{'行政・公共政策':['国家公務員（技術職）','地方公務員（技術職）','外交官','国税専門官','裁判所職員','自治体職員'],'公安・防災':['自衛官','海上保安官','救急救命士','防災職員']},
- '教育・保育':{'教育・保育':['幼稚園教諭','大学教員','スクールカウンセラー','塾講師','教育行政職員']},
- '芸術・エンタメ':{'舞台・音声':['ナレーター','脚本家','舞台照明技術者','舞台音響技術者','ダンサー','振付師'],'音楽・映像':['アニメーター','映画監督','映像編集者','ゲームクリエイター','作曲家','音響エンジニア','イラストレーター','美術家','写真家','イベント制作スタッフ']},
- 'ビジネス・金融':{'経営・企画':['営業職','商品企画職','広告・広報職','人事職','経営コンサルタント','起業家'],'会計・金融':['銀行員','ファイナンシャルプランナー','経理職','保険業務担当者']},
- 'IT・理工':{'情報技術':['Webエンジニア','AIエンジニア','システムエンジニア','UXデザイナー','ネットワークエンジニア'],'ものづくり':['電気電子エンジニア','ロボットエンジニア','土木技術者','都市計画技術者','研究開発職']},
- '医療・福祉':{'医療':['薬剤師','理学療法士','作業療法士','臨床検査技師','管理栄養士','歯科医師'],'福祉':['介護福祉士','精神保健福祉士','児童福祉職','心理職']},
- '文学・言語':{'言語・出版':['通訳者','ライター','日本語教師','校正者','図書館司書']},
- '観光・ホテル・サービス':{'観光・宿泊':['ホテルスタッフ','旅行企画職','観光ガイド','航空客室乗務員','グランドスタッフ'],'飲食・サービス':['調理師','パティシエ','ブライダルプランナー','美容師','販売職']},
- '交通・物流・インフラ':{'交通・運輸':['鉄道運転士','航空操縦士','航空整備士','物流管理職','自動車整備士'],'社会基盤':['電力技術者','建設技術者','環境コンサルタント']},
- '農業・食品':{'食・農':['農業従事者','食品開発職','水産技術者','栄養士','農業研究者']},
- 'スポーツ・健康':{'指導・競技':['スポーツトレーナー','スポーツ指導者','プロスポーツ選手','体育教員','スポーツビジネス職']},
- '研究・学術':{'自然科学':['化学研究者','生物研究者','物理学研究者','気象研究者'],'社会科学':['社会調査員','政策研究者','大学研究者']},
- '国際・地域':{'国際・外交':['国際協力職員','国際機関職員','海外営業職'],'地域・社会':['NPO職員','地域コーディネーター','自治体まちづくり担当']},
- 'メディア・出版':{'報道・制作':['記者','アナウンサー','編集者（出版）','Webメディア運営者','番組ディレクター']}
-};
-for(const [genre,groups]of Object.entries(EXTRA_CAREER_CATALOG)){
- if(!CAREER_CATALOG[genre])CAREER_CATALOG[genre]={};
- for(const [sub,items]of Object.entries(groups)){
-  if(!CAREER_CATALOG[genre][sub])CAREER_CATALOG[genre][sub]=[];
-  for(const item of items)if(!CAREER_CATALOG[genre][sub].includes(item))CAREER_CATALOG[genre][sub].push(item);
- }
-}
-// 既存教員の専門分野との関連候補を示せる範囲だけ明示的に対応付ける。
-Object.assign(CAREER_RELATED_KEYS,{
- '外交官':['topic|法・政治|政治・行政|国際関係論'],'国税専門官':['topic|経営|会計・ファイナンス|財務会計'],
- '裁判所職員':['topic|法・政治|法律学|民法'], 'ナレーター':['topic|芸術|舞台・演劇|声優・ナレーション'],
- '脚本家':['topic|芸術|舞台・演劇|脚本'], '舞台音響技術者':['topic|芸術|舞台・演劇|舞台音響'],
- '音響エンジニア':['topic|芸術|音楽|音響'],'アニメーター':['topic|芸術|映像・美術|アニメーション制作'],
- '映像編集者':['topic|芸術|映像・美術|映像編集'], '作曲家':['topic|芸術|音楽|作曲'],
- '営業職':['topic|経営|経営理論|マーケティング'], '起業家':['topic|経営|経営理論|起業'],
- '銀行員':['topic|経済|応用経済|金融論'], '経理職':['topic|経営|会計・ファイナンス|財務会計'],
- 'AIエンジニア':['topic|理工|情報・計算|人工知能'], 'Webエンジニア':['topic|理工|情報・計算|Webアプリ開発'],
- 'システムエンジニア':['topic|理工|情報・計算|プログラミング'], '大学教員':['topic|教育|教育理論|教育方法論'],
- '介護福祉士':['topic|医療・福祉|社会福祉|介護福祉学'], '理学療法士':['topic|医療・福祉|医療・健康|理学療法'],
- '学校教員':['topic|教育|教育実践|教育方法論'], 'スクールカウンセラー':['topic|教育|教育理論|カウンセリング'],
- '管理栄養士':['topic|医療・福祉|医療・健康|栄養学'], '編集者（出版）':['topic|文学|文学研究|文芸創作'],
- '記者':['topic|国際・社会|社会|ジャーナリズム'], '社会調査員':['topic|国際・社会|社会|社会調査'],
- '地域コーディネーター':['topic|国際・社会|社会|地域づくり'],
- 'スポーツトレーナー':['topic|スポーツ|競技・指導|スポーツ指導'],
- 'ホテルスタッフ':['topic|観光・サービス|観光・宿泊|ホテル運営']
-});
-
-const SEED_TEACHER_CAREERS = {"demo-a": ["国家公務員（行政職）"], "demo-b": ["データサイエンティスト"], "demo-c": ["公認会計士", "税理士"], "demo-d": ["声優", "俳優", "舞台演出家"], "demo-e": ["プログラマー", "情報セキュリティ技術者"], "demo-f": ["編集者"]};
-const ALL_CAREERS = new Set(Object.values(CAREER_CATALOG).flatMap(groups=>Object.values(groups).flat()));
-function normalizeCareerData(){
- db.teachers.forEach(t=>{if(!Array.isArray(t.careers))t.careers=[...(SEED_TEACHER_CAREERS[t.id]||[])];t.careers=t.careers.filter(v=>ALL_CAREERS.has(v))});
-}
-function careerCategoryOptions(category){return CAREER_CATALOG[category]||{}}
-function careerSelectOptions(who){
- const category=$(who+'-career-category').value;
- const subSelect=$(who+'-career-subcategory');
- fillSelect(who+'-career-subcategory',Object.keys(careerCategoryOptions(category)),'分野を選択');
- const group=subSelect.value;
- const list=$(who+'-career-list');list.replaceChildren();
- const chosen=who==='student'?student.careers:teacherCareers;
- const names=careerCategoryOptions(category)[group]||[];
- if(!names.length){list.append(make('p','職業のジャンルと分野を選択してください。','hint'));return}
- for(const name of names){
-   const label=make('label',undefined,'check');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=chosen.has(name);
-   checkbox.addEventListener('change',()=>{if(checkbox.checked)chosen.add(name);else chosen.delete(name);renderCareerSelections(who);if(who==='student'){saveStudentProfile();show('matches-card',false)}});
-   label.append(checkbox,make('span',name));list.append(label);
- }
-}
-function renderCareerSelections(who){
- const chosen=who==='student'?student.careers:teacherCareers;
- const host=$(who+'-career-selected');host.replaceChildren();
- const extras=who==='student'?extraItems(student.otherCareers):[];
- if(who==='student')$('student-career-count').textContent=(chosen.size+extras.length)+'件';
- if(!chosen.size&&!extras.length){host.append(make('span','未選択（分野だけでも検索できます）','muted'));return}
- for(const name of chosen){
-  const chip=make('span',undefined,'tag');chip.append(make('span',name));
-  const remove=make('button','×');remove.type='button';remove.setAttribute('aria-label',name+'を削除');
-  remove.addEventListener('click',()=>{chosen.delete(name);renderCareerSelections(who);careerSelectOptions(who);if(who==='student'){saveStudentProfile();show('matches-card',false)}});
-  chip.append(remove);host.append(chip);
- }
- for(const name of extras)host.append(make('span','その他：'+name,'tag'));
-}
-function findTeacherRecommendations(){
- const chosen=[...student.keys], careers=[...student.careers],otherTopics=extraItems(student.otherTopics),otherCareers=extraItems(student.otherCareers);
- return db.teachers.filter(t=>t.purposes.includes(student.purpose)).map(t=>{
-  const exact=chosen.filter(k=>t.keys.includes(k));
-  const directCareers=careers.filter(c=>(t.careers||[]).includes(c));
-  const relatedCareers=careers.filter(c=>!directCareers.includes(c)&&(CAREER_RELATED_KEYS[c]||[]).some(k=>t.keys.includes(k)));
-  const topicNames=t.keys.map(k=>parseKey(k).label).concat(extraItems(t.extraTopics));
-  const careerNames=(t.careers||[]).concat(extraItems(t.extraCareers));
-  const freeTopicMatches=otherTopics.filter(x=>topicNames.some(y=>norm(y)===norm(x)));
-  const freeCareerMatches=otherCareers.filter(x=>careerNames.some(y=>norm(y)===norm(x)));
-  const score=directCareers.length*8+exact.length*3+relatedCareers.length+freeTopicMatches.length*3+freeCareerMatches.length*8;
-  return{t,exact,directCareers,relatedCareers,freeTopicMatches,freeCareerMatches,score};
- }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score||a.t.name.localeCompare(b.t.name,'ja'));
-}
-
-const KEY='teacher-matching-ab-a-db-v1';
-const PROFILE_KEY='teacher-matching-ab-a-student-v1';
-const SESSION_KEY='teacher-matching-ab-a-session-v1';
-const LEGACY_PROFILE_KEY='teacher-matching-ab-a-legacy-unused-v1';
-const PURPOSE_LABELS={university:'大学受験',hsjob:'高校卒業後の就職',gradjob:'大学卒業後の就職'};
-const TYPE_LABELS={category:'大分類',subcategory:'中分類',topic:'詳細分野',qualification:'資格・検定'};
+const EDITION="A";
+const KEY='teacher_matching_fresh_v1',SKEY='teacher_matching_fresh_session',LKEY='teacher_matching_fresh_lang';
 const $=id=>document.getElementById(id);
-const deep=v=>JSON.parse(JSON.stringify(v));
-const norm=s=>String(s||'').normalize('NFKC').replace(/\s/g,'').toLocaleLowerCase('ja');
-const clean=s=>String(s||'').trim().replace(/\s+/g,' ').slice(0,70);
-const objHas=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
-function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&v.catalog&&v.teachers&&Array.isArray(v.requests))return v}catch(e){}return{catalog:deep(SEED_CATALOG),teachers:deep(SEED_TEACHERS),requests:[]}}
-let db=load();
-migrateCatalogV08();
-if(!Array.isArray(db.consultRequests))db.consultRequests=[];
-if(!Array.isArray(db.studentIds))db.studentIds=['S1001','S1002'];
-if(!Array.isArray(db.teacherAdditions))db.teacherAdditions=[];
-if(!Array.isArray(db.deleteRequests))db.deleteRequests=[];
-// IDは学内の生徒を区別する識別子の試作。過去のデモを使っていた端末では既存IDを引き継ぎます。
-try{for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i);if(k&&k.startsWith(PROFILE_KEY+'-')){let id=k.slice((PROFILE_KEY+'-').length);if(/^S[0-9]{4}$/.test(id)&&!db.studentIds.includes(id))db.studentIds.push(id)}}}catch(e){}
-let student={name:'',grade:'',klass:'',purpose:'',keys:new Set(),careers:new Set(),deviceId:'',university:{name:'',faculty:'',department:''},universityReady:false,otherTopics:'',otherCareers:''};
-let teacherKeys=new Set();
-let teacherCareers=new Set();
-let studentStep=1;
-let activeUser=null;
-let activePage='login';
-const studentProfileKey=()=>PROFILE_KEY+'-'+(activeUser?.id||'none');
-const seedTeacherIds=['T1001','T1002','T1003','T1004','T1005','T1006'];
-function normalizeTeacherAccounts(){db.teachers.forEach((t,i)=>{if(!t.loginId&&i<seedTeacherIds.length)t.loginId=seedTeacherIds[i]})}
-normalizeTeacherAccounts();
-normalizeCareerData();
-function save(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){console.error('保存できませんでした',e);return false}}
-// 日本の学校年度は4月1日から。端末内デモデータのみであり、本人確認には使えません。
-function academicYear(date=new Date()){return date.getFullYear()-(date.getMonth()<3?1:0)}
-function loadStudentProfile(){
- try{
-  // S1001に限り旧試作データの引き継ぎを許可します。
-  const found=localStorage.getItem(studentProfileKey())||(activeUser?.id==='S1001'?localStorage.getItem(LEGACY_PROFILE_KEY):null);
-  const raw=found?JSON.parse(found):null;
-  return raw&&typeof raw==='object'&&typeof raw.name==='string'?raw:null;
- }catch(e){return null}
-}
-function saveStudentProfile(){
- const data={name:student.name,grade:student.grade,klass:student.klass,purpose:student.purpose,keys:[...student.keys],careers:[...student.careers],academicYear:academicYear(),deviceId:student.deviceId,university:{...student.university},universityReady:student.universityReady,otherTopics:student.otherTopics,otherCareers:student.otherCareers};
- try{localStorage.setItem(studentProfileKey(),JSON.stringify(data));return true}catch(e){console.error('生徒デモデータの保存エラー',e);return false}
-}
-function restoreStudentProfile(){
- const saved=loadStudentProfile();
- if(!saved||!saved.name||!saved.grade||!saved.klass){$('student-name').value='';$('student-grade').value='';$('student-class').value='';show('year-update-banner',false);setStudentStep(1);return}
- student.name=clean(saved.name);student.grade=String(saved.grade).slice(0,20);student.klass=clean(saved.klass);
- student.purpose=Object.hasOwn(PURPOSE_LABELS,saved.purpose)?saved.purpose:'';
- student.keys=new Set(Array.isArray(saved.keys)?saved.keys.filter(x=>typeof x==='string').slice(0,300):[]);
- student.careers=new Set(Array.isArray(saved.careers)?saved.careers.filter(x=>ALL_CAREERS.has(x)):[]);
- student.otherTopics=String(saved.otherTopics||'').slice(0,300);student.otherCareers=String(saved.otherCareers||'').slice(0,300);renderStudentExtras();
- renderCareerSelections('student');
- student.deviceId=typeof saved.deviceId==='string'?saved.deviceId:'';
- const uni=saved.university&&typeof saved.university==='object'?saved.university:{};
- student.university={name:clean(uni.name),faculty:clean(uni.faculty),department:clean(uni.department)};
- student.universityReady=saved.universityReady===true;
- populateUniversityFields();
- $('student-name').value=student.name;
- $('student-grade').value=student.grade;
- $('student-class').value=student.klass;
- $('student-identity-label').textContent=`${activeUser.id}｜${student.name}｜${student.grade}｜${student.klass}`;
- $('purpose-label').textContent=PURPOSE_LABELS[student.purpose]||'';
- renderSelected('student');
- if(saved.academicYear!==academicYear()){
-  $('student-grade').value='';$('student-class').value='';
-  show('year-update-banner',true);setStudentStep(1);
- }else{
-  setStudentStep(student.purpose?studentStartStep():2);
- }
-}
-function msg(id,message,error=false){const el=$(id);el.textContent=message;el.classList.toggle('error',error)}
-function make(tag,txt,cls){const el=document.createElement(tag);if(txt!==undefined)el.textContent=txt;if(cls)el.className=cls;return el}
-function show(el,on=true){(typeof el==='string'?$(el):el).classList.toggle('hide',!on)}
-function sortedGroups(){return Object.keys(db.catalog).sort((a,b)=>a.localeCompare(b,'ja'))}
-function fillSelect(id,options,placeholder,preserve=true){const el=$(id),old=el.value;el.replaceChildren(new Option(placeholder,''));for(const opt of options)el.add(new Option(opt,opt));if(preserve&&options.includes(old))el.value=old;return el.value}
-function subs(group){return group&&db.catalog[group]?Object.keys(db.catalog[group].sub):[]}
-function items(group,sub){return group&&sub&&db.catalog[group]?.sub[sub]||[]}
-function quals(group){return group&&db.catalog[group]?.quals||[]}
-const topicKey=(g,s,x)=>['topic',g,s,x].join('|');
-const qualificationKey=(g,x)=>['qual',g,x].join('|');
-function parseKey(key){const p=key.split('|');return p[0]==='topic'?{type:'topic',group:p[1],sub:p[2],label:p.slice(3).join('|')}:{type:'qual',group:p[1],label:p.slice(2).join('|')}}
-function keyLabel(key){const p=parseKey(key);return `${p.group} / ${p.type==='topic'?p.sub+' / ':''}${p.label}`}
-function needsUniversity(){return student.purpose==='university'||student.purpose==='gradjob'}
-function studentStartStep(){return needsUniversity()&&!student.universityReady?2.5:3}
-function universitySummary(){const u=student.university;return `大学：${u.name||'未定'} ／ 学部：${u.faculty||'未定'} ／ 学科：${u.department||'未定'}`}
-function populateUniversityFields(){
- for(const key of ['name','faculty','department']){
-  const input=$('university-'+key),unknown=$('university-'+key+'-undecided');
-  input.value=student.university[key]||'';
-  unknown.checked=!input.value;
-  input.disabled=unknown.checked;
- }
-}
-function setStudentStep(n){
- studentStep=Math.max(1,Math.min(4,n));
- const hasUni=needsUniversity();
- const stages=hasUni?[1,2,2.5,3]:[1,2,3];
- const pos=stages.indexOf(studentStep);
- for(let i=1;i<=4;i++){
-  show('bar'+i,i<=stages.length);
-  $('bar'+i).classList.toggle('done',studentStep===4||i<=pos+1);
- }
- for(let i=1;i<=3;i++)show('student-step-'+i,i===studentStep||(i===3&&studentStep===4));
- show('student-step-university',studentStep===2.5&&hasUni);
- show('student-identity',studentStep>1);
- show('matches-card',studentStep===4);
- if(studentStep<4)show('teams-template-box',false);
- $('step-1-caption').textContent='STEP 1 / '+stages.length;
- $('step-2-caption').textContent='STEP 2 / '+stages.length;
- $('step-3-caption').textContent='STEP '+stages.length+' / '+stages.length;
- show('change-university',hasUni);
- show('university-summary',hasUni);
- if(hasUni)$('university-summary').textContent='登録した大学情報：'+universitySummary();
- if(studentStep===2.5){
-  $('university-step-heading').textContent=student.purpose==='university'?'志望する大学・学部・学科':'進学予定・在籍予定の大学・学部・学科';
-  populateUniversityFields();
- }
- const stageNum=hasUni?(studentStep===2.5?3:studentStep===3?4:studentStep):studentStep;
- const stepName=studentStep===1?'基本情報':studentStep===2?'相談の目的':studentStep===2.5?'大学・学部・学科':'興味分野';
- $('progress-caption').textContent=studentStep===4?'推薦結果 / 先生への相談':`${stageNum} / ${stages.length} ${stepName}`;
- updateNavButtons();
-}
-for(const key of ['name','faculty','department']){
- const input=$('university-'+key),unknown=$('university-'+key+'-undecided');
- unknown.addEventListener('change',()=>{
-  if(unknown.checked){input.value='';input.disabled=true}
-  else{input.disabled=false;input.focus()}
-  student.universityReady=false;
- });
- input.addEventListener('input',()=>{student.universityReady=false});
-}
-$('save-university').addEventListener('click',()=>{
- for(const key of ['name','faculty','department']){
-  const input=$('university-'+key),unknown=$('university-'+key+'-undecided');
-  if(!unknown.checked&&!clean(input.value)){
-   msg('university-status','未定を選ぶか、内容を入力してください。',true);
-   input.focus();return;
-  }
- }
- student.university=Object.fromEntries(['name','faculty','department'].map(k=>[k,$('university-'+k+'-undecided').checked?'':clean($('university-'+k).value)]));
- student.universityReady=true;
- const persisted=saveStudentProfile();
- msg('university-status',persisted?'':'保存できませんでした。この端末では入力内容が失われる可能性があります。',!persisted);
- setStudentStep(3);
-});
-$('student-register').addEventListener('click',()=>{
- if(activeUser?.role!=='student')return;
- try{
-  const f={name:$('student-name'),grade:$('student-grade'),klass:$('student-class')};
-  for(const input of Object.values(f))input.removeAttribute('aria-invalid');
-  const name=clean(f.name.value),grade=f.grade.value,klass=clean(f.klass.value);
-  if(!name||!grade||!klass){
-   const missing=!name?['name','氏名']:!grade?['grade','学年']:['klass','クラス'];
-   msg('register-status',missing[1]+'を入力・選択してください。',true);
-   f[missing[0]].setAttribute('aria-invalid','true');f[missing[0]].focus();return;
-  }
-  student.name=name;student.grade=grade;student.klass=klass;
-  if(!student.deviceId)student.deviceId='demo-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
-  $('student-identity-label').textContent=`${activeUser.id}｜${name}｜${grade}｜${klass}`;
-  const persisted=saveStudentProfile();
-  show('year-update-banner',false);
-  msg('register-status',persisted?'':'ブラウザーへの保存に失敗しました。再読み込み後は再登録が必要です。',!persisted);
-  setStudentStep(student.purpose?studentStartStep():2);
-  $(studentStep===2.5?'student-step-university':'student-step-'+Math.min(studentStep,3)).scrollIntoView({block:'start'});
- }catch(e){console.error('Registration error',e);msg('register-status','登録画面でエラーが発生しました。ページを開き直してください。',true)}
-});
-$('edit-identity').addEventListener('click',()=>setStudentStep(1));
-document.querySelectorAll('[data-purpose]').forEach(btn=>btn.addEventListener('click',()=>{
-  const previous=student.purpose;
-  student.purpose=btn.dataset.purpose;
-  if(previous!==student.purpose)student.universityReady=false;
-  $('purpose-label').textContent=PURPOSE_LABELS[student.purpose];
-  saveStudentProfile();setStudentStep(needsUniversity()?2.5:3);show('matches-card',false);
- }));
-$('change-purpose').addEventListener('click',()=>setStudentStep(2));
-$('change-university').addEventListener('click',()=>setStudentStep(2.5));
-function renderChecks(id,data,keys){const host=$(id);host.replaceChildren();if(!data.length){host.append(make('div','現在、この分類には登録項目がありません。','hint'));return}for(const entry of data){const label=make('label',undefined,'check'),check=document.createElement('input'),name=make('span',entry.name);check.type='checkbox';check.checked=keys.has(entry.key);check.addEventListener('change',()=>{if(check.checked)keys.add(entry.key);else keys.delete(entry.key);renderSelected(keys===student.keys?'student':'teacher');if(keys===student.keys){saveStudentProfile();show('matches-card',false)}});label.append(check,name);host.append(label)}}
-function renderPicker(who,change){
- // 先生側には従来の詳細分類管理を維持。
- if(who!=='teacher'){renderStudentCatalog();return}
- const g=$('teacher-category').value;
- show('teacher-topic-panel',!!g);if(!g)return;
- if(change==='category')fillSelect('teacher-subcategory',subs(g),'中分類を選択',false);
- const sub=$('teacher-subcategory').value;show('teacher-details',!!sub);
- if(sub)renderChecks('teacher-topic-list',items(g,sub).map(name=>({name,key:topicKey(g,sub,name)})),teacherKeys);
- renderChecks('teacher-qualification-list',quals(g).map(name=>({name,key:qualificationKey(g,name)})),teacherKeys);
-}
-function renderSelected(who){
- const keys=who==='student'?student.keys:teacherKeys,host=$(who+'-selections');host.replaceChildren();
- const custom=who==='student'?extraItems(student.otherTopics):[];
- if(who==='student')$('student-selection-count').textContent=`${keys.size+custom.length}件`;
- if(!keys.size&&!custom.length){host.append(make('span','まだ選択されていません。','muted'));return}
- for(const key of keys){
-  const chip=make('span',undefined,'tag');chip.append(make('span',keyLabel(key)));
-  const remove=make('button','×');remove.type='button';remove.setAttribute('aria-label',keyLabel(key)+'を解除');
-  remove.addEventListener('click',()=>{keys.delete(key);renderSelected(who);renderPicker(who);if(who==='student'){saveStudentProfile();show('matches-card',false)}});
-  chip.append(remove);host.append(chip);
- }
- for(const name of custom)host.append(make('span','その他：'+name,'tag'));
-}
-$('teacher-category').addEventListener('change',()=>renderPicker('teacher','category'));
-$('teacher-subcategory').addEventListener('change',()=>renderPicker('teacher','subcategory'));
-
-// 「その他」は分類追加申請ではなく、生徒本人の条件にだけ保存する。
-const extraItems=s=>[...new Set(String(s||'').split(/[\n、,，]+/).map(clean).filter(Boolean))].slice(0,16);
-function renderStudentCatalog(){
- const topics=[], qualifications=[];
- for(const group of sortedGroups()){
-  for(const sub of subs(group))for(const name of items(group,sub))topics.push({name,key:topicKey(group,sub,name)});
-  for(const name of quals(group))qualifications.push({name,key:qualificationKey(group,name)});
- }
- const sort=(a,b)=>a.name.localeCompare(b.name,'ja')||a.key.localeCompare(b.key,'ja');
- const query=norm($('student-topic-search').value),qquery=norm($('student-qualification-search').value);
- const filtered=topics.filter(a=>!query||norm(a.name).includes(query)).sort(sort).slice(0,300);
- const qfiltered=qualifications.filter(a=>!qquery||norm(a.name).includes(qquery)).sort(sort).slice(0,300);
- const dup=new Map();for(const a of topics)dup.set(a.name,(dup.get(a.name)||0)+1);
- const uniqueTopics=filtered.map(a=>({...a,name:dup.get(a.name)>1?a.name+'（'+parseKey(a.key).group+'）':a.name}));
- const uniqueQual=qfiltered.map(a=>({...a,name:a.name}));
- renderChecks('student-topic-list',uniqueTopics,student.keys);
- renderChecks('student-qualification-list',uniqueQual,student.keys);
- $('student-topic-hits').textContent=`表示：${filtered.length}件 / 登録済み${topics.length}件（複数選択できます）`;
-}
-function renderStudentExtras(){
- for(const [key,field]of [['topics','otherTopics'],['careers','otherCareers']]){
-  const check=$('student-other-'+key+'-toggle');
-  check.checked=!!student[field];
-  $('student-other-'+key).value=student[field]||'';
-  show('student-other-'+key+'-wrap',check.checked);
- }
- renderSelected('student');renderCareerSelections('student');
-}
-for(const [key,field]of [['topics','otherTopics'],['careers','otherCareers']]){
- $('student-other-'+key+'-toggle').addEventListener('change',e=>{
-  if(!e.target.checked){student[field]='';$('student-other-'+key).value=''}
-  show('student-other-'+key+'-wrap',e.target.checked);
-  renderSelected('student');renderCareerSelections('student');saveStudentProfile();show('matches-card',false);
- });
- $('student-other-'+key).addEventListener('input',e=>{
-  student[field]=e.target.value.slice(0,300);renderSelected('student');renderCareerSelections('student');saveStudentProfile();show('matches-card',false);
- });
-}
-$('student-topic-search').addEventListener('input',renderStudentCatalog);
-$('student-qualification-search').addEventListener('input',renderStudentCatalog);
-
-function renderMatches(){
- const host=$('matches');host.replaceChildren();const chosen=[...student.keys],desired=[...student.careers];
- if(!chosen.length&&!desired.length&&!extraItems(student.otherTopics).length&&!extraItems(student.otherCareers).length){host.append(make('div','分野・資格・職業またはその他から1件以上選択してください。','empty'));msg('search-status','検索条件がありません。',true);return}
- msg('consult-feedback','');const ranked=findTeacherRecommendations();
- msg('search-status',`${ranked.length}名の先生が見つかりました。`);
- if(!ranked.length){host.append(make('div','目的・分野・職業に合う先生はまだ登録されていません。条件を変更するか、先生に対応できる分野の登録を相談してください。','empty'));return}
- for(const r of ranked){
-  const card=make('article',undefined,'teacher-card'),h=make('div',undefined,'head');
-  h.append(make('h3',r.t.name),make('span',`分野${r.exact.length+r.freeTopicMatches.length}件・職業${r.directCareers.length+r.freeCareerMatches.length}件が直接一致`,'sub'));
-  card.append(h,make('p',r.t.note||'登録された範囲で相談できます。'));
-  const reasons=make('div',undefined,'tagbox');
-  for(const career of r.directCareers)reasons.append(make('span','職業一致：'+career,'tag'));
-  for(const key of r.exact)reasons.append(make('span','分野一致：'+keyLabel(key),'tag'));
-  for(const career of r.relatedCareers)reasons.append(make('span','関連分野からの候補：'+career,'tag'));
-  for(const name of r.freeTopicMatches)reasons.append(make('span','その他の分野一致：'+name,'tag'));
-  for(const name of r.freeCareerMatches)reasons.append(make('span','その他の職業一致：'+name,'tag'));
-  card.append(reasons);
-  if(r.relatedCareers.length)card.append(make('p','関連分野による候補は、その職業に直接対応できることを保証しません。','hint'));
-
-  const profile=make('details',undefined,'teacher-profile-details');
-  const profileSummary=make('summary','対応できる分野・職業と先生の登録情報を見る');profile.append(profileSummary);
-  const addLine=(label,items)=>{if(items&&items.length)profile.append(make('p',label+'：'+items.join('、')))};
-  addLine('対応専門分野',r.t.keys.filter(k=>parseKey(k).type==='topic').map(k=>parseKey(k).label));
-  addLine('対応資格・検定',r.t.keys.filter(k=>parseKey(k).type==='qual').map(k=>parseKey(k).label));
-  addLine('その他の専門分野',extraItems(r.t.extraTopics));
-  addLine('相談できる職業',[...(r.t.careers||[]),...extraItems(r.t.extraCareers)]);
-  if(r.t.strongTopics)profile.append(make('p','特に得意な分野：'+r.t.strongTopics));
-  if(r.t.consultAreas)profile.append(make('p','具体的に相談できる内容：'+r.t.consultAreas));
-  if(r.t.publicExperience)profile.append(make('p','公開している経験・資格：'+r.t.publicExperience));
-  card.append(profile);
-
-  const actions=make('div',undefined,'row');
-  const templateBtn=make('button','Teams用の申込文を作る','btn secondary sm');templateBtn.type='button';
-  templateBtn.addEventListener('click',()=>{prepareTeamsTemplate(r.t,r.exact);$('teams-template-box').scrollIntoView({behavior:'smooth',block:'start'})});
-  actions.append(templateBtn);
-  card.append(actions);
-  
-  host.append(card);
- }
-}
-function submitConsultation(t,matched){
- if(activeUser?.role!=='student')return;
- if(!student.name||!student.grade||!student.klass){msg('consult-feedback','基本情報を登録してください。',true);setStudentStep(1);return}
- const pending=db.consultRequests.some(q=>q.teacherId===t.id&&((q.studentLoginId&&q.studentLoginId===activeUser?.id)||(!q.studentLoginId&&q.studentDeviceId===student.deviceId))&&q.status!=='cancelled');
- if(pending){msg('consult-feedback','この先生には申込済みです（デモ）。');return}
- const ok=confirm(`${t.name}への相談申込を、端末内デモに登録します。\n※この操作では先生へ実際の通知は届きません。`);
- if(!ok)return;
- const req={university:needsUniversity()?{...student.university}:null,careers:[...student.careers,...extraItems(student.otherCareers)],otherTopics:extraItems(student.otherTopics),id:'consult-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),teacherId:t.id,studentLoginId:activeUser.id,studentDeviceId:student.deviceId,studentName:student.name,studentGrade:student.grade,studentClass:student.klass,purpose:student.purpose,matchedKeys:matched.slice(0,30),createdAt:new Date().toISOString(),status:'new'};
- db.consultRequests.push(req);
- if(!save()){db.consultRequests.pop();msg('consult-feedback','申込デモの保存に失敗しました。ブラウザーの保存設定をご確認ください。',true);return}
- prepareTeamsTemplate(t,matched);
- msg('consult-feedback',`${t.name}への申込を端末内に保存しました（デモ）。先生への送信はまだ行われません。`);
- renderMatches();
- msg('consult-feedback',`${t.name}への申込を端末内に保存しました（デモ）。先生への送信はまだ行われません。`);
- renderTeacherInbox();
-}
-function renderInboxTeacherOptions(){
- const select=$('inbox-teacher'),old=select.value;
- select.replaceChildren(new Option('先生を選択してください',''));
- for(const t of db.teachers)select.add(new Option(t.name,t.id));
- if(activeUser?.role==='teacher'&&db.teachers.some(t=>t.id===activeUser.teacherId))select.value=activeUser.teacherId;else if(db.teachers.some(t=>t.id===old))select.value=old;
- renderTeacherInbox();
-}
-function renderTeacherInbox(){
- const id=activeUser?.role==='teacher'?activeUser.teacherId:null,host=$('inbox-list');host.replaceChildren();
- if(!id){msg('inbox-count','先生を選ぶと申込が表示されます。');return}
- const received=db.consultRequests.filter(q=>q.teacherId===id).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
- const unread=received.filter(q=>q.status==='new').length;
- msg('inbox-count',`申込 ${received.length}件 / 未確認 ${unread}件（端末内デモ）`);
- if(!received.length){host.append(make('div','この先生への相談申込はまだありません。','empty'));return}
- for(const q of received){
-  const card=make('article',undefined,'teacher-card');
-  card.append(make('h3',q.status==='new'?'未確認の相談申込':'確認済みの相談申込'));
-  const date=new Date(q.createdAt);const dateLabel=Number.isNaN(date.getTime())?'日時不明':date.toLocaleString('ja-JP');
-  card.append(make('p',`${q.studentName}｜${q.studentGrade}｜${q.studentClass}｜${dateLabel}`));
-  card.append(make('p',`相談目的：${PURPOSE_LABELS[q.purpose]||'未設定'}`));
-  if(q.university)card.append(make('p',`大学情報：大学 ${q.university.name||'未定'} / 学部 ${q.university.faculty||'未定'} / 学科 ${q.university.department||'未定'}`));
-  if(q.careers?.length)card.append(make('p','職業：'+q.careers.join('、')));
-  const matched=make('div',undefined,'tagbox');
-  for(const key of q.matchedKeys||[])matched.append(make('span',keyLabel(key),'tag'));
-  card.append(matched);
-  if(q.status==='new'){
-   const seen=make('button','確認済みにする','btn secondary sm');seen.type='button';
-   seen.addEventListener('click',()=>{q.status='seen';if(!save()){q.status='new';alert('保存できませんでした');return}renderTeacherInbox()});
-   card.append(seen);
-  }
-  host.append(card);
- }
-}
-$('inbox-teacher').addEventListener('change',renderTeacherInbox);
-$('refresh-inbox').addEventListener('click',()=>{db=load();if(!Array.isArray(db.consultRequests))db.consultRequests=[];renderTeacherInbox()});
-$('find-teachers').addEventListener('click',()=>{if(activeUser?.role!=='student')return;renderMatches();setStudentStep(4);$('matches-card').scrollIntoView({behavior:'smooth',block:'start'})});
-function renderTeacherList(){
- const host=$('teacher-list');host.replaceChildren();
- const t=db.teachers.find(x=>x.id===activeUser?.teacherId);
- if(!t){host.append(make('div','このIDに対応する先生が見つかりません。','empty'));return}
- const card=make('div',undefined,'teacher-card');
- card.append(make('h3',t.name),make('p','ID：'+t.loginId+' / '+t.purposes.map(p=>PURPOSE_LABELS[p]).join(' / ')),make('p',t.keys.length?t.keys.map(keyLabel).join('、'):'対応分野は未登録です。'),make('p',t.careers?.length?'対応職業：'+t.careers.join('、'):'対応職業の登録なし'),make('p',extraItems(t.extraTopics).length?'その他の対応分野：'+extraItems(t.extraTopics).join('、'):'') ,make('p',t.consultAreas?'相談可能な内容：'+t.consultAreas:''));
- host.append(card);
-}
-function populateTeacherForm(){
- const t=db.teachers.find(x=>x.id===activeUser?.teacherId);if(!t)return;
- $('teacher-name').value=t.name;$('teacher-note').value=t.note||'';
- for(const [field,id] of [['extraTopics','teacher-extra-topics'],['extraCareers','teacher-extra-careers'],['strongTopics','teacher-strong-topics'],['consultAreas','teacher-consult-areas'],['publicExperience','teacher-public-experience']])$(id).value=t[field]||'';
- teacherKeys=new Set(t.keys);teacherCareers=new Set(t.careers||[]);renderCareerSelections('teacher');careerSelectOptions('teacher');
- document.querySelectorAll('input[name="teacher-purpose"]').forEach(x=>x.checked=t.purposes.includes(x.value));
- renderSelected('teacher');renderPicker('teacher');renderTeacherDeletionOptions();
- $('teacher-account-label').textContent=`ログイン中：${t.name}（ID：${t.loginId}）`;
-}
-$('teacher-save').addEventListener('click',()=>{
- if(activeUser?.role!=='teacher')return;
- const t=db.teachers.find(x=>x.id===activeUser.teacherId);if(!t){msg('teacher-status','先生IDが見つかりません。',true);return}
- const name=clean($('teacher-name').value),purposes=[...document.querySelectorAll('input[name="teacher-purpose"]:checked')].map(x=>x.value);
- if(!name||!purposes.length||(!teacherKeys.size&&!teacherCareers.size&&!extraItems($('teacher-extra-topics').value).length&&!extraItems($('teacher-extra-careers').value).length)){msg('teacher-status','表示名・対応目的と、分野または職業を登録してください。',true);return}
- const before=deep(t);t.name=name;t.purposes=purposes;t.keys=[...teacherKeys];t.careers=[...teacherCareers];t.note=clean($('teacher-note').value);
- for(const [field,id] of [['extraTopics','teacher-extra-topics'],['extraCareers','teacher-extra-careers'],['strongTopics','teacher-strong-topics'],['consultAreas','teacher-consult-areas'],['publicExperience','teacher-public-experience']])t[field]=$(id).value.trim().slice(0,400);
- if(!save()){Object.assign(t,before);msg('teacher-status','保存に失敗しました。',true);return}
- renderTeacherList();renderInboxTeacherOptions();populateTeacherForm();msg('teacher-status','担当分野を保存しました。');
-});
-function refreshGroups(){
- const groups=sortedGroups();
- const old=$('teacher-category').value;
- fillSelect('teacher-category',groups,'大分類を選択');
- renderPicker('teacher',old===$('teacher-category').value?'':'category');
- for(const id of ['admin-category','admin-preview','teacher-add-category'])fillSelect(id,groups,'大分類を選択');
- renderStudentCatalog();refreshAdminFields();refreshTeacherAddFields();renderSelected('student');renderSelected('teacher');renderPreview();renderTeacherDeletionOptions();
-}
-function refreshAdminFields(){const type=$('admin-type').value,group=$('admin-category').value;show('admin-group-field',type!=='category');show('admin-sub-field',type==='topic');if(type==='topic')fillSelect('admin-subcategory',subs(group),'中分類を選択')}
-$('admin-type').addEventListener('change',refreshAdminFields);$('admin-category').addEventListener('change',refreshAdminFields);
-function addItem(type,group,sub,input){const name=clean(input);if(!name)return '空欄';if(name.includes('|')||['__proto__','prototype','constructor'].includes(name))return '使用できない名称です';if(type==='category'){if(sortedGroups().some(x=>norm(x)===norm(name)))return '重複';db.catalog[name]={sub:{},quals:[]};return null}if(!objHas(db.catalog,group))return '追加先の大分類がありません';if(type==='subcategory'){if(subs(group).some(x=>norm(x)===norm(name)))return '重複';db.catalog[group].sub[name]=[];return null}
- if(type==='topic'){if(!objHas(db.catalog[group].sub,sub))return '中分類がありません';const a=db.catalog[group].sub[sub];if(a.some(x=>norm(x)===norm(name)))return '重複';a.push(name);return null}if(type==='qualification'){const a=db.catalog[group].quals;if(a.some(x=>norm(x)===norm(name)))return '重複';a.push(name);return null}return '不明な種類'}
-$('admin-add').addEventListener('click',()=>{const type=$('admin-type').value,group=$('admin-category').value,sub=$('admin-subcategory').value,names=$('admin-names').value.split(/\r?\n/).map(clean).filter(Boolean);if(!names.length||(type!=='category'&&!group)||(type==='topic'&&!sub)){msg('admin-status','階層と項目名を入力してください。',true);return}let added=0,skipped=0;for(const n of names){if(addItem(type,group,sub,n))skipped++;else added++}save();$('admin-names').value='';refreshGroups();renderStats();msg('admin-status',`${added}件追加、${skipped}件は重複・入力不備などで除外しました。`,added===0)});
-function renderPreview(){const g=$('admin-preview').value,host=$('catalog-preview');host.replaceChildren();if(!g){host.append(make('div','大分類を選択してください。','hint'));return}const group=db.catalog[g];for(const [sub,topics]of Object.entries(group.sub)){const block=make('div',undefined,'admin-box');block.append(make('strong',sub),make('div',topics.length?topics.join(' / '):'詳細分野の登録なし','hint'));host.append(block)}const block=make('div',undefined,'admin-box');block.append(make('strong','関連する資格・検定'),make('div',group.quals.length?group.quals.join(' / '):'資格・検定の登録なし','hint'));host.append(block)}
-$('admin-preview').addEventListener('change',renderPreview);
-
-function refreshTeacherAddFields(){
- const type=$('teacher-add-type').value,g=$('teacher-add-category').value;
- show('teacher-add-group-field',type!=='category');show('teacher-add-sub-field',type==='topic');
- if(type==='topic')fillSelect('teacher-add-subcategory',subs(g),'中分類を選択');
-}
-$('teacher-add-type').addEventListener('change',refreshTeacherAddFields);
-$('teacher-add-category').addEventListener('change',refreshTeacherAddFields);
-function teacherAdditionLabel(a){return `${TYPE_LABELS[a.type]}：${a.group?a.group+' / ':''}${a.sub?a.sub+' / ':''}${a.name}`}
-function entryExists(a){
- if(a.type==='category')return objHas(db.catalog,a.name);
- if(!objHas(db.catalog,a.group))return false;
- if(a.type==='subcategory')return objHas(db.catalog[a.group].sub,a.name);
- if(a.type==='topic')return !!db.catalog[a.group].sub[a.sub]?.includes(a.name);
- if(a.type==='qualification')return db.catalog[a.group].quals.includes(a.name);
- return false;
-}
-function renderTeacherDeletionOptions(){
- const mine=db.teacherAdditions.filter(a=>a.teacherId===activeUser?.teacherId&&entryExists(a));
- const pendingIds=new Set(db.deleteRequests.map(r=>r.additionId));
- const available=mine.filter(a=>!pendingIds.has(a.id));
- const old=$('teacher-delete-target').value,select=$('teacher-delete-target');
- select.replaceChildren(new Option('削除したい項目を選択',''));
- for(const a of available)select.add(new Option(teacherAdditionLabel(a),a.id));
- if(available.some(a=>a.id===old))select.value=old;
- $('teacher-delete-submit').disabled=!available.length;
- const waiting=mine.filter(a=>pendingIds.has(a.id));
- $('teacher-pending-deletions').textContent=waiting.length?`管理者の確認待ち：${waiting.map(teacherAdditionLabel).join('、')}`:'削除申請はありません。';
-}
-$('teacher-add-submit').addEventListener('click',()=>{
- if(activeUser?.role!=='teacher')return;
- const type=$('teacher-add-type').value,group=$('teacher-add-category').value,sub=$('teacher-add-subcategory').value,name=clean($('teacher-add-name').value);
- if(!name||(type!=='category'&&!group)||(type==='topic'&&!sub)){msg('teacher-add-status','追加先と項目名を入力してください。',true);return}
- const snapshot=deep(db);
- const err=addItem(type,group,sub,name);
- if(err){msg('teacher-add-status','追加できません：'+err,true);return}
- db.teacherAdditions.push({id:'added-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),teacherId:activeUser.teacherId,type,group: type==='category'?'':group,sub:type==='topic'?sub:'',name,createdAt:new Date().toISOString()});
- if(!save()){db=snapshot;msg('teacher-add-status','保存できませんでした。',true);return}
- $('teacher-add-name').value='';refreshGroups();renderStats();renderTeacherDeletionOptions();
- msg('teacher-add-status',`「${name}」を追加しました。ほかの先生も選択できます。`);
-});
-$('teacher-delete-submit').addEventListener('click',()=>{
- if(activeUser?.role!=='teacher')return;
- const id=$('teacher-delete-target').value;
- const addition=db.teacherAdditions.find(a=>a.id===id&&a.teacherId===activeUser.teacherId&&entryExists(a));
- if(!addition){msg('teacher-delete-status','申請する項目を選択してください。',true);return}
- if(db.deleteRequests.some(r=>r.additionId===id)){msg('teacher-delete-status','申請済みの項目です。',true);return}
- db.deleteRequests.push({id:'del-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),additionId:addition.id,teacherId:activeUser.teacherId,type:addition.type,group:addition.group,sub:addition.sub,name:addition.name,createdAt:new Date().toISOString()});
- if(!save()){db.deleteRequests.pop();msg('teacher-delete-status','申請を保存できませんでした。',true);return}
- msg('teacher-delete-status',`「${addition.name}」の削除申請を出しました。管理者の承認までは表示されます。`);
- renderTeacherDeletionOptions();
-});
-function keyBelongsToRemoved(key,a){
- const info=parseKey(key);
- if(a.type==='category')return info.group===a.name;
- if(a.type==='subcategory')return info.group===a.group&&info.sub===a.name;
- if(a.type==='topic')return info.group===a.group&&info.type==='topic'&&info.sub===a.sub&&info.label===a.name;
- if(a.type==='qualification')return info.group===a.group&&info.type==='qual'&&info.label===a.name;
- return false;
-}
-function removeCatalogItem(a){
- if(!entryExists(a))return '対象の項目がありません';
- if(a.type==='category')delete db.catalog[a.name];
- if(a.type==='subcategory')delete db.catalog[a.group].sub[a.name];
- if(a.type==='topic')db.catalog[a.group].sub[a.sub]=db.catalog[a.group].sub[a.sub].filter(v=>v!==a.name);
- if(a.type==='qualification')db.catalog[a.group].quals=db.catalog[a.group].quals.filter(v=>v!==a.name);
- // 削除後に存在しない分野が教師・生徒の選択に残ることを防ぐ。
- for(const t of db.teachers)t.keys=t.keys.filter(k=>!keyBelongsToRemoved(k,a));
- for(const k of [...teacherKeys])if(keyBelongsToRemoved(k,a))teacherKeys.delete(k);
- for(const k of [...student.keys])if(keyBelongsToRemoved(k,a))student.keys.delete(k);
- // ほかの生徒IDに結び付けた、このブラウザー内の保存情報も整理する。
- try{for(const id of db.studentIds){const k=PROFILE_KEY+'-'+id,v=localStorage.getItem(k);if(!v)continue;const d=JSON.parse(v);if(Array.isArray(d.keys)){d.keys=d.keys.filter(key=>!keyBelongsToRemoved(key,a));localStorage.setItem(k,JSON.stringify(d))}}}catch(e){console.warn('保存済み選択項目の更新に失敗',e)}
- db.teacherAdditions=db.teacherAdditions.filter(x=>!(a.type==='category'?(x.name===a.name&&x.type==='category')||x.group===a.name:a.type==='subcategory'?x.group===a.group&&(x.type==='subcategory'&&x.name===a.name||x.sub===a.name):x.id===a.additionId));
- return null;
-}
-function renderDeleteRequests(){
- const host=$('delete-requests');host.replaceChildren();
- if(!db.deleteRequests.length){host.append(make('div','削除申請はありません。','empty'));return}
- for(const r of db.deleteRequests){
-  const div=make('div',undefined,'admin-box');
-  const t=db.teachers.find(t=>t.id===r.teacherId);
-  div.append(make('strong',teacherAdditionLabel(r)),make('div','申請元：'+(t?.name||'不明な先生'),'hint'));
-  const row=make('div',undefined,'row');const yes=make('button','内容を確認して削除','btn danger sm'),no=make('button','却下','btn muted sm');
-  yes.addEventListener('click',()=>{
-   if(!entryExists(r)){alert('対象が既にありません。申請を却下して整理してください。');return}
-   if(!confirm('「'+r.name+'」を削除しますか？ 下位項目や、生徒・先生が選んだ該当分野も削除対象となります。'))return;
-   const err=removeCatalogItem(r);if(err){alert(err);return}
-   db.deleteRequests=db.deleteRequests.filter(x=>x.id!==r.id&&!(!entryExists(x)));
-   if(!save())alert('保存に失敗しました。ブラウザーを再読み込みしてください。');
-   refreshGroups();renderStats();renderDeleteRequests();renderTeacherDeletionOptions();renderTeacherList();
-   if(activeUser?.role==='student'){saveStudentProfile();renderSelected('student')}
-  });
-  no.addEventListener('click',()=>{db.deleteRequests=db.deleteRequests.filter(x=>x.id!==r.id);save();renderDeleteRequests();renderTeacherDeletionOptions()});
-  row.append(yes,no);div.append(row);host.append(div);
- }
-}
-
-function renderRequests(){ /* v0.8：生徒からの項目追加申請は廃止 */ }
-function renderStats(){const groups=sortedGroups();const subcount=groups.reduce((n,g)=>n+subs(g).length,0),details=groups.reduce((n,g)=>n+Object.values(db.catalog[g].sub).reduce((m,a)=>m+a.length,0),0),qcount=groups.reduce((n,g)=>n+quals(g).length,0);$('stats').replaceChildren();for(const [a,b]of [[groups.length,'大分類'],[subcount,'中分類'],[details+qcount,'詳細分野・資格']]){const stat=make('div',undefined,'stat');stat.append(make('strong',a),make('span',b));$('stats').append(stat)}}
-$('reset').addEventListener('click',()=>{if(!confirm('デモの分類・先生・追加申請・相談申込を初期状態に戻しますか？'))return;db={catalog:deep(SEED_CATALOG),teachers:deep(SEED_TEACHERS),requests:[],consultRequests:[],studentIds:['S1001','S1002'],teacherAdditions:[],deleteRequests:[]};migrateCatalogV08();normalizeTeacherAccounts();student.keys.clear();teacherKeys.clear();saveStudentProfile();save();refreshGroups();renderTeacherList();renderInboxTeacherOptions();renderRequests();renderDeleteRequests();renderStats();renderAdminStudentIds();show('matches-card',false)});
-window.addEventListener('storage',(e)=>{if(e.key===KEY){db=load();if(!Array.isArray(db.consultRequests))db.consultRequests=[];renderTeacherInbox();refreshGroups();renderTeacherDeletionOptions()}});
-// Teams送信文の導入部分のみを生成。氏名・学年・クラス・番号・詳細は自動挿入しません。
-function prepareTeamsTemplate(teacher,matchedKeys,slot=null){
- const topics=[...student.keys].map(keyLabel).concat(extraItems(student.otherTopics).map(x=>'その他：'+x));const careers=[...student.careers].concat(extraItems(student.otherCareers).map(x=>'その他：'+x));
- const universityInfo=needsUniversity()?`\n大学名：${student.university.name||'未定'}\n学部：${student.university.faculty||'未定'}\n学科：${student.university.department||'未定'}`:'';
- const slotInfo=slot?`\n【希望日時】\n${Number(slot.date.slice(0,4))}年${Number(slot.date.slice(5,7))}月${Number(slot.date.slice(8,10))}日 ${slot.time}～${nextQuarterHour(slot.time)}\n予定表の表示：${SLOT_MARKS[slot.state]}（${SLOT_LABELS[slot.state]}）\n※上記の時間にご相談できるかご確認をお願いいたします。`:'';
- $('teams-template').value=`${teacher.name}\n\n突然のご連絡失礼いたします。${student.grade}・${student.klass}の${student.name}です。\n進路についてご相談したく、ご連絡いたしました。\n\n【相談目的】\n${PURPOSE_LABELS[student.purpose]||'未選択'}${universityInfo}\n\n【興味分野・資格】\n${topics.length?topics.join('、'):'未選択'}\n\n【目指している職業】\n${careers.length?careers.join('、'):'未定'}${slotInfo}\n\n【具体的に相談したい内容】\n（ここにご自身で相談内容をご記入ください）\n\nお忙しいところ恐れ入りますが、ご都合をお知らせいただけますと幸いです。\nよろしくお願いいたします。`;
- $('teams-target').textContent=`相談先：${teacher.name}（Teamsに自動送信されることはありません）`;
- msg('copy-status','');show('teams-template-box',true);
-}
-$('copy-teams').addEventListener('click',async()=>{
- const input=$('teams-template');if(!input.value)return;
- try{if(!navigator.clipboard||!window.isSecureContext)throw Error('clipboard not supported');await navigator.clipboard.writeText(input.value);msg('copy-status','コピーしました。')}
- catch(e){input.focus();input.select();input.setSelectionRange(0,input.value.length);
-  try{if(document.execCommand('copy'))msg('copy-status','コピーしました。');else msg('copy-status','文面を選択しました。コピーを選んでください。')}
-  catch{msg('copy-status','文面を選択しました。コピーを選んでください。')}
- }
-});
-function getRoleInfo(id){
- if(/^S[0-9]{4}$/.test(id)&&db.studentIds.includes(id))return{id,role:'student'};
- if(id==='A1001')return{id,role:'admin'};
- if(/^T[0-9]{4}$/.test(id)){const t=db.teachers.find(t=>t.loginId===id);if(t)return{id,role:'teacher',teacherId:t.id}}
- return null;
-}
-function view(page){
- if(page!=='login'&&!activeUser)return;
- if(page==='student'&&activeUser?.role!=='student')return;
- if(page==='teacher'&&activeUser?.role!=='teacher')return;
- if(page==='admin'&&activeUser?.role!=='admin')return;
- activePage=page;
- for(const el of document.querySelectorAll('section.screen'))el.classList.toggle('active',el.id===page);
- show('navigation',!!activeUser&&page!=='login');show('session-bar',!!activeUser&&page!=='login');
- document.body.classList.toggle('has-bottom-navigation',!!activeUser&&page!=='login');
- updateNavButtons();window.scrollTo({top:0,behavior:'instant'});
-}
-function updateNavButtons(){
- if(!$('nav-back'))return;
- $('nav-back').disabled=!activeUser||activePage==='home'||activePage==='login';
- let next=!!activeUser&&activePage==='home';
- if(activePage==='student')next=studentStep<4;
- $('nav-next').disabled=!next;
- $('nav-next').textContent=activePage==='student'&&studentStep===3?'先生を探す →':'進む →';
-}
-function roleLanding(){return activeUser?.role||'student'}
-function openMain(){
- if(!activeUser)return;
- if(activeUser.role==='student'){restoreStudentProfile();view('student')}
- if(activeUser.role==='teacher'){populateTeacherForm();renderTeacherList();renderInboxTeacherOptions();view('teacher')}
- if(activeUser.role==='admin'){renderStats();renderRequests();renderDeleteRequests();renderAdminTeacherIds();renderAdminStudentIds();view('admin')}
-}
-function renderHome(){
- const role=activeUser?.role;if(!role)return;
- const data={
-  student:['生徒ホーム','自分の相談目的・興味分野・目指す職業を選び、先生を探します。','先生を探す','先生の推薦 → Teams用申込文コピー'],
-  teacher:['先生ホーム','相談申込のデモ通知、対応分野の登録と専門分野の追加ができます。','先生画面を開く','先生の項目追加は即時反映・削除は管理者承認（別端末とは同期しません）'],
-  admin:['管理者ホーム','分野の追加、削除申請の承認、生徒・先生IDの重複しない発行ができます。','管理画面を開く','試作データ内のID発行と項目管理']
- }[role];
- $('home-title').textContent=data[0];$('home-description').textContent=data[1];$('home-primary').textContent=data[2];$('home-role-details').textContent=data[3];
- $('home-subtitle').textContent=`ログインID：${activeUser.id}（${{student:'生徒',teacher:'先生',admin:'管理者'}[role]}）`;
- $('session-label').textContent=`${{student:'生徒',teacher:'先生',admin:'管理者'}[role]}ID：${activeUser.id}（デモ）`;
-}
-function resetStudentContext(){student={name:'',grade:'',klass:'',purpose:'',keys:new Set(),careers:new Set(),deviceId:'',university:{name:'',faculty:'',department:''},universityReady:false,otherTopics:'',otherCareers:''};renderStudentExtras();renderCareerSelections('student');setStudentStep(1)}
-function login(id){
- const info=getRoleInfo(String(id).trim().toUpperCase());
- if(!info){msg('login-status','このIDは使用できません。試作用のIDを確認してください。',true);return}
- activeUser=info;try{localStorage.setItem(SESSION_KEY,info.id)}catch(e){}
- resetStudentContext();renderHome();
- if(info.role==='student')restoreStudentProfile();
- if(info.role==='teacher'){populateTeacherForm();renderInboxTeacherOptions();renderTeacherList()}
- view('home');msg('login-status','');
-}
-$('login-button').addEventListener('click',()=>login($('login-id').value));
-$('login-id').addEventListener('keydown',e=>{if(e.key==='Enter')login($('login-id').value)});
-document.querySelectorAll('[data-demo-id]').forEach(b=>b.addEventListener('click',()=>{$('login-id').value=b.dataset.demoId;$('login-id').focus()}));
-$('logout').addEventListener('click',()=>{activeUser=null;try{localStorage.removeItem(SESSION_KEY)}catch(e){}view('login')});
-$('nav-home').addEventListener('click',()=>view('home'));
-$('nav-back').addEventListener('click',()=>{
- if(activePage==='student'){if(studentStep===1)view('home');else if(studentStep===3)setStudentStep(needsUniversity()?2.5:2);else if(studentStep===2.5)setStudentStep(2);else if(studentStep===4)setStudentStep(3);else setStudentStep(studentStep-1)}
- else if(activePage==='teacher'||activePage==='admin')view('home');
-});
-$('nav-next').addEventListener('click',()=>{
- if(activePage==='home'){openMain();return}
- if(activePage!=='student')return;
- if(studentStep===1){$('student-register').click();return}
- if(studentStep===2){if(student.purpose)setStudentStep(needsUniversity()?2.5:3);else alert('相談目的を選択してください。');return}
- if(studentStep===2.5){$('save-university').click();return}
- if(studentStep===3){renderMatches();setStudentStep(4);$('matches-card').scrollIntoView({behavior:'smooth',block:'start'})}
-});
-$('home-primary').addEventListener('click',openMain);
-function renderAdminTeacherIds(){
- const host=$('admin-teacher-ids');host.replaceChildren();
- for(const t of db.teachers){host.append(make('div',`${t.loginId||'未発行'}：${t.name}`,'admin-box'))}
-}
-$('admin-create-teacher').addEventListener('click',()=>{
- if(activeUser?.role!=='admin')return;
- const name=clean($('new-teacher-name').value);if(!name){msg('admin-account-status','架空の先生名を入力してください。',true);return}
- let n=1001;const used=new Set(db.teachers.map(x=>x.loginId));while(used.has('T'+n))n++;
- const loginId='T'+n;if(loginId.length>5){msg('admin-account-status','IDの上限です。',true);return}
- db.teachers.push({id:'t'+Date.now().toString(36),loginId,name,purposes:[],keys:[],note:''});
- if(!save()){db.teachers.pop();msg('admin-account-status','保存に失敗しました。',true);return}
- $('new-teacher-name').value='';msg('admin-account-status',`${name} のログインIDは ${loginId} です（試作用）。`);renderAdminTeacherIds();
-});
-
-function renderAdminStudentIds(){
- const host=$('admin-student-ids');host.replaceChildren();
- host.append(make('p',`発行済み：${db.studentIds.length}件（このブラウザー内のみ）`));
- const span=make('div',db.studentIds.join(' / '),'hint');host.append(span);
-}
-$('admin-create-students').addEventListener('click',()=>{
- if(activeUser?.role!=='admin')return;
- const count=Number($('student-id-count').value),used=new Set(db.studentIds),issued=[];
- for(let n=1001;n<=9999&&issued.length<count;n++){
-  const id='S'+n;
-  if(!used.has(id)){used.add(id);issued.push(id)}
- }
- if(issued.length!==count){msg('student-id-result','発行できるIDが不足しています。',true);return}
- db.studentIds.push(...issued);
- if(!save()){db.studentIds.splice(-issued.length);msg('student-id-result','IDを保存できませんでした。',true);return}
- msg('student-id-result','新しく発行したID：'+issued.join('、'));
- renderAdminStudentIds();
-});
-for(const who of ['student','teacher']){
- fillSelect(who+'-career-category',Object.keys(CAREER_CATALOG),'職業のジャンルを選択',false);
- $(who+'-career-category').addEventListener('change',()=>{fillSelect(who+'-career-subcategory',Object.keys(careerCategoryOptions($(who+'-career-category').value)),'分野を選択',false);careerSelectOptions(who)});
- $(who+'-career-subcategory').addEventListener('change',()=>careerSelectOptions(who));
- careerSelectOptions(who);renderCareerSelections(who);
-}
-try{
- refreshGroups();renderRequests();renderDeleteRequests();renderStats();renderAdminStudentIds();save();
- $('runtime-warning').remove();
- const savedSession=localStorage.getItem(SESSION_KEY);
- if(savedSession&&getRoleInfo(savedSession))login(savedSession);
- else view('login');
-}catch(e){
- console.error('Initialization error',e);
- const warning=$('runtime-warning');
- if(warning)warning.textContent='画面の初期化でエラーが発生しました。Safari・Chromeで開き直してください。解決しない場合はエラー状況を教えてください。';
-}
+const deep=x=>JSON.parse(JSON.stringify(x));
+const clean=s=>String(s??'').replace(/[\u0000-\u001f]/g,' ').trim();
+const norm=s=>String(s??'').normalize('NFKC').toLowerCase().replace(/[\s　·・\-－()（）]/g,'');
+const lines=s=>String(s??'').split(/[\n,、，]+/).map(clean).filter(Boolean).slice(0,20);
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const PURPOSES=[['university','大学受験・進学','University admissions / study'],['hsjob','高校卒業後の就職','Employment after high school'],['gradjob','大学卒業後の就職','Employment after university']];
+const STUDY_TYPES=[['primary','卒業時の主専攻','Primary major at graduation'],['former','途中で変更した以前の専攻','Former major (changed)'],['double','第二専攻・二重専攻','Second major / double major'],['minor','副専攻','Minor'],['coursework','履修・学習経験','Coursework / study experience']];
+const SUPPORT_KINDS=[['admissions','入試・出願相談','Admissions / applications'],['study','学部・授業・大学生活','Academics / campus life'],['career','卒業後の進路','Careers after graduation'],['general','その他の進路相談','General guidance']];
+const SOURCE_TYPES=[['guidance','進路指導・合格者支援の経験','Guidance / successful applicant support'],['personal','自身の在学・受験経験','Personal attendance / application'],['academic','専門分野の知識','Academic subject expertise'],['research','情報収集・調査した内容','Research / verified information']];
+const CATEGORIES=[
+['literature','文学・言語','Literature & Languages'],['history','歴史・文化','History & Culture'],['philosophy','哲学・思想','Philosophy & Ethics'],['psychology','心理学','Psychology'],['sociology','社会学','Sociology'],['education','教育・保育','Education & Childcare'],['law','法律・政治','Law & Politics'],['economics','経済学','Economics'],['business','経営・商学','Business & Commerce'],['international','国際・観光','International & Tourism'],['arts','芸術・表現','Arts & Performance'],['design','デザイン学','Design'],['architecture','建築・住環境','Architecture & Living Environments'],['it','情報学','Information Technology'],['science','数学・自然科学','Mathematics & Natural Sciences'],['engineering','工学','Engineering'],['health','医療・保健','Medicine & Healthcare'],['life','生命・農学・食','Life Science, Agriculture & Food'],['environment','環境・地球科学','Environment & Earth Science'],['sports','スポーツ科学','Sports Science'] ];
+// Each subject can belong to multiple groups; the underlying subject ID remains unique.
+const RAW_TOPICS=[
+['Japanese literature','日本文学','literature'],['English literature','英米文学','literature'],['World literature','世界文学','literature'],['Creative writing','文芸創作','literature,arts'],['Linguistics','言語学','literature'],['Japanese language education','日本語教育','literature,education'],['English language teaching','英語教育','literature,education'],['Translation','翻訳','literature,international'],['Interpretation','通訳','literature,international'],['Intercultural communication','異文化コミュニケーション','literature,international'],
+['Japanese history','日本史','history'],['World history','世界史','history'],['Archaeology','考古学','history'],['Cultural anthropology','文化人類学','history,sociology'],['Folklore studies','民俗学','history'],['Cultural studies','文化研究','history,sociology'],['Art history','美術史','history,arts'],
+['Philosophy','哲学','philosophy'],['Ethics','倫理学','philosophy'],['Religious studies','宗教学','philosophy'],['Aesthetics','美学','philosophy,arts'],['Logic','論理学','philosophy,science'],
+['Clinical psychology','臨床心理学','psychology,health'],['Social psychology','社会心理学','psychology,sociology'],['Cognitive psychology','認知心理学','psychology'],['Developmental psychology','発達心理学','psychology,education'],['Educational psychology','教育心理学','psychology,education'],['Sports psychology','スポーツ心理学','psychology,sports'],['Counseling psychology','カウンセリング心理学','psychology,health,education'],
+['Sociology','社会学','sociology'],['Media studies','メディア研究','sociology'],['Social research','社会調査','sociology'],['Gender studies','ジェンダー研究','sociology'],['Community development','地域づくり','sociology'],['Public relations','広報','sociology,business'],['Journalism','ジャーナリズム','sociology,literature'],
+['Teacher education','教員養成','education'],['Special needs education','特別支援教育','education'],['Early childhood education','幼児教育','education'],['Childcare','保育','education'],['Career guidance','進路指導','education'],['Education technology','ICT教育','education,it'],['Pedagogy','教育方法論','education'],['Performing arts education','演劇教育','arts,education'],
+['Civil law','民法','law'],['Criminal law','刑法','law'],['Constitutional law','憲法','law'],['International law','国際法','law,international'],['Political science','政治学','law'],['Public administration','行政学','law'],['Public policy','公共政策','law,economics'],['Civil service exam','公務員試験','law'],
+['Microeconomics','ミクロ経済学','economics'],['Macroeconomics','マクロ経済学','economics'],['Econometrics','計量経済学','economics,science'],['Behavioral economics','行動経済学','economics,psychology'],['International economics','国際経済学','economics,international'],['Labor economics','労働経済学','economics'],['Finance','金融論','economics,business'],['Statistics','統計学','economics,science,it'],
+['Entrepreneurship','起業','business'],['Management strategy','経営戦略','business'],['Marketing','マーケティング','business'],['Accounting','会計学','business'],['Business planning','事業開発','business'],['Human resource management','人的資源管理','business'],['Product management','商品企画','business,design'],['Brand management','ブランド戦略','business,design'],['Project management','プロジェクトマネジメント','business,it'],
+['International relations','国際関係','international,law'],['International cooperation','国際協力','international'],['Study abroad','海外留学','international,education'],['Tourism','観光学','international'],['Hotel management','ホテル経営','international,business'],['Aviation service','航空サービス','international'],['Multicultural society','多文化共生','international,sociology'],
+['Acting','演技','arts'],['Voice acting','声優・ナレーション','arts'],['Theatre direction','舞台演出','arts'],['Theatre production','舞台制作','arts,business'],['Screenwriting','脚本','arts,literature'],['Film production','映像制作','arts,design'],['Film editing','映像編集','arts,it'],['Music theory','音楽理論','arts'],['Composition','作曲','arts'],['Drums','ドラム','arts'],['Dance','ダンス','arts,sports'],['Stage lighting','舞台照明','arts,engineering'],['Stage sound','舞台音響','arts,engineering'],['Photography','写真','arts,design'],['Animation','アニメーション制作','arts,design'],
+['Interior design','インテリアデザイン','design,architecture,arts'],['Spatial design','空間デザイン','design,architecture'],['Furniture design','家具デザイン','design,architecture'],['Graphic design','グラフィックデザイン','design,arts'],['Product design','プロダクトデザイン','design,engineering'],['UX design','UXデザイン','design,it'],['Fashion design','ファッションデザイン','design,arts'],['Color theory','色彩計画','design,arts'],['Service design','サービスデザイン','design,business'],['Game design','ゲームデザイン','design,it,arts'],
+['Architectural design','建築設計','architecture,engineering'],['Housing studies','住居学','architecture'],['Urban planning','都市計画','architecture,engineering'],['Landscape architecture','ランドスケープ','architecture,design'],['Universal design','ユニバーサルデザイン','architecture,design,health'],['Building environment','建築環境','architecture,engineering'],['Architectural history','建築史','architecture,history'],
+['Programming','プログラミング','it'],['Web application development','Webアプリ開発','it'],['Artificial intelligence','人工知能','it'],['Machine learning','機械学習','it,science'],['Data science','データサイエンス','it,science'],['Cybersecurity','情報セキュリティ','it'],['Computer networks','ネットワーク','it'],['Information design','情報デザイン','it,design'],
+['Mathematics','数学','science'],['Applied mathematics','応用数学','science,engineering'],['Physics','物理学','science'],['Chemistry','化学','science'],['Biology','生物学','science,life'],['Astronomy','天文学','science'],['Geology','地質学','science,environment'],['Meteorology','気象学','science,environment'],
+['Mechanical engineering','機械工学','engineering'],['Electrical engineering','電気電子工学','engineering'],['Robotics','ロボット工学','engineering,it'],['Aerospace engineering','航空宇宙工学','engineering'],['Civil engineering','土木工学','engineering'],['Materials engineering','材料工学','engineering'],['Sound engineering','音響工学','engineering,arts'],
+['Medicine','医学','health'],['Nursing','看護学','health'],['Pharmacy','薬学','health'],['Physical therapy','理学療法','health,sports'],['Occupational therapy','作業療法','health'],['Public health','公衆衛生学','health'],['Nutrition','栄養学','health,life'],['Social welfare','社会福祉学','health,sociology'],['Psychiatry','精神医学','health,psychology'],
+['Agricultural science','農学','life'],['Food science','食品科学','life'],['Fisheries','水産学','life'],['Animal science','畜産学','life'],['Horticulture','園芸学','life'],['Food development','食品開発','life,business'],['Food education','食育','life,education'],
+['Environmental science','環境科学','environment'],['Ecology','生態学','environment,life'],['Environmental conservation','環境保全','environment'],['Disaster prevention','防災','environment,engineering'],['Renewable energy','再生可能エネルギー','environment,engineering'],['Climate science','気候科学','environment'],
+['Sports coaching','スポーツ指導','sports,education'],['Exercise physiology','運動生理学','sports,health'],['Sports management','スポーツマネジメント','sports,business'],['Sports medicine','スポーツ医学','sports,health'],['Sports rehabilitation','スポーツリハビリテーション','sports,health'] ];
+const RAW_CAREERS=[
+['公務員・公共','Public service','国家公務員（行政職）','National government officer'],['公務員・公共','Public service','地方公務員（行政職）','Local government officer'],['公務員・公共','Public service','警察官','Police officer'],['公務員・公共','Public service','消防士','Firefighter'],['公務員・公共','Public service','外交官','Diplomat'],
+['教育・保育','Education','学校教員','School teacher'],['教育・保育','Education','特別支援学校教員','Special education teacher'],['教育・保育','Education','保育士','Childcare professional'],['教育・保育','Education','大学教員','University professor'],
+['芸術・エンタメ','Arts & Entertainment','声優','Voice actor'],['芸術・エンタメ','Arts & Entertainment','俳優','Actor'],['芸術・エンタメ','Arts & Entertainment','舞台演出家','Theatre director'],['芸術・エンタメ','Arts & Entertainment','ミュージシャン','Musician'],['芸術・エンタメ','Arts & Entertainment','映像制作','Film producer'],['芸術・エンタメ','Arts & Entertainment','アニメーター','Animator'],['芸術・エンタメ','Arts & Entertainment','ダンサー','Dancer'],
+['デザイン・建築','Design & Architecture','インテリアデザイナー','Interior designer'],['デザイン・建築','Design & Architecture','建築士','Architect'],['デザイン・建築','Design & Architecture','グラフィックデザイナー','Graphic designer'],['デザイン・建築','Design & Architecture','UXデザイナー','UX designer'],['デザイン・建築','Design & Architecture','家具デザイナー','Furniture designer'],['デザイン・建築','Design & Architecture','都市計画家','Urban planner'],
+['ビジネス・金融','Business & Finance','経営者','Entrepreneur'],['ビジネス・金融','Business & Finance','マーケター','Marketer'],['ビジネス・金融','Business & Finance','公認会計士','Certified public accountant'],['ビジネス・金融','Business & Finance','金融アナリスト','Financial analyst'],['ビジネス・金融','Business & Finance','営業職','Sales professional'],
+['IT・理工','IT & Engineering','プログラマー','Software engineer'],['IT・理工','IT & Engineering','データサイエンティスト','Data scientist'],['IT・理工','IT & Engineering','情報セキュリティ技術者','Cybersecurity professional'],['IT・理工','IT & Engineering','ロボット技術者','Robotics engineer'],
+['医療・福祉','Healthcare','医師','Physician'],['医療・福祉','Healthcare','看護師','Nurse'],['医療・福祉','Healthcare','薬剤師','Pharmacist'],['医療・福祉','Healthcare','理学療法士','Physical therapist'],['医療・福祉','Healthcare','社会福祉士','Social worker'],['医療・福祉','Healthcare','心理カウンセラー','Counselor'],
+['文学・文化','Writing & Culture','編集者','Editor'],['文学・文化','Writing & Culture','翻訳者','Translator'],['文学・文化','Writing & Culture','通訳者','Interpreter'],['文学・文化','Writing & Culture','学芸員','Museum curator'],
+['観光・サービス','Tourism & Services','ホテルスタッフ','Hotel staff'],['観光・サービス','Tourism & Services','旅行プランナー','Travel planner'],['観光・サービス','Tourism & Services','客室乗務員','Flight attendant'],
+['自然・環境','Science & Environment','研究者','Research scientist'],['自然・環境','Science & Environment','農業従事者','Agricultural professional'],['自然・環境','Science & Environment','環境コンサルタント','Environmental consultant'],
+['スポーツ','Sports','スポーツ指導者','Sports coach'],['スポーツ','Sports','スポーツトレーナー','Athletic trainer'] ];
+const QUALIFICATIONS=[['英語検定','English proficiency certification'],['TOEIC','TOEIC'],['簿記','Bookkeeping certification'],['基本情報技術者試験','Fundamental Information Technology Engineer'],['ITパスポート','IT Passport'],['色彩検定','Color certification'],['インテリアコーディネーター','Interior coordinator qualification'],['建築士','Architect license'],['保育士資格','Childcare qualification'],['看護師免許','Nursing license'],['教員免許','Teaching license'],['統計検定','Statistics certification']];
+const DICT={
+brand:['教員マッチングアプリ','Teacher Matching App'],brandSub:['目的に合う学校の先生を探す','Find a school teacher for your goals'],demoNotice:['これは架空データを使った操作確認用の試作です。IDは本人認証ではなく、入力内容はこのブラウザー内だけに保存されます。実在する生徒・先生の個人情報を入力しないでください。','Prototype using fictional data only. IDs do not authenticate users. Data is stored only in this browser. Do not enter real students’ or teachers’ personal information.'],logout:['ログアウト','Log out'],loginTitle:['デモIDでログイン','Sign in with a demo ID'],loginIntro:['生徒・先生・管理者の画面を試せます。実在の個人情報は入力しないでください。','Try student, teacher, and admin views. Do not enter real personal information.'],loginId:['ログインID','Login ID'],loginAction:['ログイン','Sign in'],tryId:['試すIDを選択してください：','Choose a demo ID:'],sampleStudent:['生徒 S1001','Student S1001'],sampleTeacher:['先生 T1001','Teacher T1001'],sampleAdmin:['管理者 A1001','Admin A1001'],aboutTitle:['この試作でできること','What this prototype does'],studentTitle:['相談する先生を探す','Find a teacher to consult'],studentIntro:['保存済みの入力内容を確認しながら、毎回最初のページから進めます。','Review your saved details in order, starting from page one every time.'],identityTitle:['基本情報の確認','Check your basic information'],identityInfo:['登録済みの内容があれば表示します。変更がなければそのまま「進む」を選んでください。','Saved details will be prefilled. If everything is correct, select Next.'],newYear:['新年度になったため、学年・クラスを確認し直してください。','A new academic year has started. Please confirm your grade and class.'],name:['氏名（デモ用）','Name (demo only)'],grade:['学年','Grade'],class:['クラス','Class'],namePlaceholder:['例：テスト 太郎（架空）','e.g. Demo Student'],classPlaceholder:['例：A組','e.g. Class A'],purposeTitle:['先生に相談したい目的','What would you like help with?'],purposeInfo:['前回の選択も保持されます。毎回確認したうえで進んでください。','Your previous selection is saved. Review it before proceeding.'],universityTitle:['大学・学部・学科','University, faculty, and department'],universityInfo:['決まっている項目だけ入力してください。大学名、学部、学科のうち一つだけでも先生を検索できます。','Enter only what you know. You can search using only a university, a faculty, or a department.'],uniName:['大学名','University'],faculty:['学部・学群','Faculty / school'],department:['学科・専攻','Department / program'],undecided:['未定','Undecided'],interestsTitle:['興味分野・目指す職業','Interests and future careers'],interestInfo:['大学情報だけで検索することも、専門分野・職業と組み合わせることもできます。未入力でも進めます。','Search by university information alone, or combine it with subjects and careers. These fields are optional.'],topicSelectTitle:['興味・専門分野','Subjects and areas of interest'],topicSearch:['専門分野を検索','Search subjects'],topicSearchPlaceholder:['例：演技、看護、インテリア','e.g. acting, nursing, interior design'],topicCategory:['分野ジャンル（任意）','Subject category (optional)'],multiHint:['複数分野を選択できます。異なる分類も組み合わせられます。','Select multiple fields across different categories.'],freeTopics:['一覧にない専門分野（任意・改行区切り）','Other subjects (optional; one per line)'],freeTopicsPlaceholder:['例：舞台衣装制作','e.g. Costume design'],careerTitle:['目指している職業','Future careers'],careerSearch:['職業を検索','Search careers'],careerSearchPlaceholder:['例：声優、デザイナー','e.g. voice actor, designer'],careerGenre:['職業ジャンル（任意）','Career category (optional)'],freeCareers:['一覧にない職業（任意・改行区切り）','Other careers (optional; one per line)'],freeCareersPlaceholder:['例：美術展示プランナー','e.g. Exhibition planner'],resultsTitle:['先生の検索結果','Teacher search results'],editSearch:['条件を修正する','Edit search'],resultsIntro:['登録情報との一致に基づく候補です。関連分野だけが一致した場合は区別して表示します。相談できることを保証するものではありません。','Results reflect declared information. Partial subject matches are identified separately and do not guarantee availability or expertise.'],teamsTitle:['Teamsで送る申込文','Message for Microsoft Teams'],teamsInfo:['このアプリから申込・送信・先生への通知は行われません。文章をコピーして、学校指定のTeamsから先生に送信してください。','This app does not book, send, or notify teachers. Copy the message and send it to your teacher through your school’s Microsoft Teams.'],copy:['文章をコピー','Copy message'],teacherTitle:['先生の登録情報','Teacher profile'],teacherIntro:['対応できる分野と学習歴を区別して登録できます。別の大分類の専門分野も複数選択できます。','Add your consultation areas separately from your academic history. You can select fields across multiple categories.'],teacherNoInbox:['相談申込はこのアプリでは受信・保存しません。生徒はTeamsで直接連絡します。','This app does not receive or store consultation requests. Students contact teachers directly via Teams.'],teacherProfile:['基本情報・対応範囲','Profile and consultation scope'],displayName:['表示名','Display name'],displayNameEn:['英語の表示名（任意）','English display name (optional)'],purposes:['対応できる相談目的（複数選択）','Types of consultation you can provide'],teacherAbout:['紹介文（生徒に表示）','Introduction (shown to students)'],teacherPublic:['公開できる経験や資格（任意）','Experience / qualifications to share (optional)'],teacherTopics:['相談対応できる専門分野・職業','Subjects and careers you can advise on'],teacherTopicsInfo:['複数の大分類を横断して選択できます。選択内容は保存されます。','Select from as many different categories as needed. Selections are saved.'],teacherTopicHint:['チェックを付けた分野は、異なるジャンルへ移動しても保持されます。','Selected subjects stay selected when you change categories.'],saveProfile:['この内容を保存する','Save profile'],schoolHistoryTitle:['大学で学んだ専攻・学習歴','Academic majors and study history'],schoolHistoryHelp:['以前の専攻、卒業時の専攻、二重専攻、副専攻、履修経験を分けて記録できます。学んだ経験だけで相談対応を保証するものではありません。','Record former majors, primary majors, double majors, minors, or coursework separately. Studying a subject does not automatically mean you can advise students about it.'],addHistory:['学習歴を追加','Add academic history'],majorField:['学んだ分野・専攻','Field / major studied'],studyType:['学習歴の種類','Type of academic history'],historyNote:['補足（任意）','Notes (optional)'],addButton:['追加する','Add'],uniSupportTitle:['相談に対応できる大学・学部・学科','Universities / faculties you can advise on'],uniSupportInfo:['単なる卒業・在学経験とは区別して、現在相談できる大学情報を登録してください。大学・学部・学科のうち、対応できる範囲だけ入力できます。','Register university-specific information you can currently advise on, separately from your own attendance history. Leave unknown or unsupported fields blank.'],supportKind:['相談できる内容','Consultation type'],experienceSource:['知識の根拠','Basis of knowledge'],checkedYear:['確認した年（任意）','Year information was checked (optional)'],catalogAddTitle:['専門分野・資格・分類の追加','Add subjects, qualifications, or categories'],catalogAddHelp:['不足している項目を追加できます。同じブラウザー内の生徒・先生の選択肢にも反映されます。実運用には共有データベースが必要です。','Add missing categories and subjects. They appear for all demo accounts in this browser. A shared database is required for real deployment.'],addKind:['追加する項目','Item type'],category:['大分類','Category'],subcategory:['中分類','Subcategory'],nameJa:['日本語の項目名','Japanese name'],nameEn:['英語の項目名（任意）','English name (optional)'],otherCategoryHelp:['追加した専門分野は、必要に応じて管理者が複数分類に紐づけられます。','Additional category associations can be added in later versions.'],catalogAddBtn:['項目を追加する','Add item'],ownAdditions:['自分が追加した項目','Items you added'],deleteApproval:['削除は管理者に申請し、承認されると実行されます。','Removal requires an administrator to approve your request.'],scheduleManageTitle:['相談可能な予定表（B版のみ）','Weekly availability (Edition B only)'],scheduleManageInfo:['○＝相談可能、△＝要確認、×＝不可。各マスを押すと状態が切り替わります。端末内デモのため他端末とは同期しません。','○ = available, △ = needs confirmation, × = unavailable. Click a cell to change it. This local demo does not sync between devices.'],adminTitle:['管理画面（デモ）','Admin area (demo)'],adminDesc:['分類・先生IDの管理と、先生からの項目削除申請を確認します。','Manage test accounts and review teacher requests to remove catalog items.'],pendingDelete:['削除の承認待ち','Pending removal requests'],accountsTitle:['テスト用アカウントを追加','Create test accounts'],createTeacher:['先生IDを作成','Create teacher ID'],createStudent:['生徒IDを作成','Create student ID'],adminInfoTitle:['登録データの概要','Data overview'],adminWarning:['この画面のIDはアクセス制御ではありません。学校での公開に使用しないでください。','Demo IDs are not access control. Do not use this prototype in a real school deployment.'],back:['← 戻る','← Back'],home:['⌂ ホーム','⌂ Home'],next:['進む →','Next →'],searchTeachers:['先生を探す →','Find teachers →'],none:['なし','None'],all:['すべて','All'],allCats:['すべての分類','All categories'],allCareers:['すべての職業ジャンル','All career categories'],noHits:['一致する候補がありません','No matches'],selectAtLeast:['選択してください。','Please select an option.'],requiredIdentity:['氏名・学年・クラスを入力してください。','Please enter a name, grade, and class.'],saved:['保存しました。','Saved.'],saveFailed:['保存できませんでした。ブラウザーの設定をご確認ください。','Unable to save. Check your browser settings.'],saveNoted:['選択内容は保存されています。','Your selections are saved.'],enterUni:['未定を選ぶか、内容を入力してください。','Enter a value or mark it undecided.'],unknownId:['使用できないIDです。','Unknown ID.'],step:['STEP','STEP'],basic:['基本情報','Basic information'],purpose:['相談目的','Consultation goal'],university:['大学情報','University'],interests:['分野・職業','Subjects & careers'],universityReason:['大学一致','University match'],facultyReason:['学部一致','Faculty match'],deptReason:['学科一致','Department match'],topicReason:['専門分野一致','Subject match'],careerReason:['職業一致','Career match'],otherReason:['自由記入と一致','Custom field match'],matchedAll:['大学条件がすべて一致','All university fields match'],partialUni:['大学情報の一部が一致','Partial university match'],relatedOnly:['専門分野・職業のみ一致','Subject/career match only'],noUniMatch:['大学に直接一致する先生はいません。関連分野でも検索してください。','No direct university matches. Try related subjects.'],consultation:['相談目的','Consultation purpose'],uniInfo:['大学情報','University information'],subjectInfo:['興味分野','Subjects of interest'],careerInfo:['目指す職業','Career interests'],previewDetails:['先生の登録情報と一致した理由','View profile and match reasons'],teacherMessage:['Teams用の申込文を作る','Create Teams message'],teacherScheduleBtn:['この先生の予定表を見る','View this teacher’s schedule'],closeSchedule:['予定表を閉じる','Hide schedule'],scheduleSelect:['希望日時を選択してください。','Choose a preferred time.'],timeSelected:['選択した日時','Selected time'],needTime:['○または△から日時を選んでください。','Select a ○ or △ slot.'],messagePrepared:['Teams用の文面を作成しました。','Teams message prepared.'],copyDone:['コピーしました。','Copied.'],copyManual:['コピーできませんでした。文章を選択してコピーしてください。','Automatic copy failed. Please select and copy the text manually.'],profileEmpty:['該当する登録情報がありません。','No entries yet.'],remove:['削除','Remove'],requestDelete:['削除申請','Request removal'],requested:['申請済み','Requested'],approve:['承認','Approve'],reject:['却下','Reject'],catalogCategory:['大分類','Category'],catalogSubcategory:['中分類','Subcategory'],catalogTopic:['詳細分野','Specific subject'],catalogQualification:['資格・検定','Qualification'],catalogStatus:['項目を登録しました。','Item added.'],duplicate:['同じ名前の項目があります。','An item with this name already exists.'],needLabel:['項目名を入力してください。','Enter an item name.'],needParent:['追加先の分類を選んでください。','Select a parent category.'],needSupport:['大学・学部・学科を一つ以上入力してください。','Enter at least a university, faculty, or department.'],needHistory:['大学名と専攻を入力してください。','Enter a university and major.'],supportTag:['相談対応大学','University advisory scope'],historyTag:['学習歴','Academic history'],sourceTag:['知識の根拠','Source of knowledge'],sortInfo:['一致条件が多い順に表示','Sorted by matching conditions'],noTopics:['専門分野は未選択です。','No subjects selected.'],showing:['表示','Showing'],topicTotal:['登録件数','Total'],nextWeek:['次の週','Next week'],prevWeek:['前の週','Previous week'],weekThis:['今週','This week'],slotDemo:['予定表は架空の端末内デモです。実際の空き時間を示すものではありません。','Schedule is fictional, local-only demo data. It does not reflect actual availability.'],requestTime:['この日時でTeams文面を作成','Create Teams message for this time'],scheduleUnknown:['△は先生への確認が必要です。予約は確定しません。','△ requires confirmation from the teacher. No booking is confirmed.'],testOnly:['試作用','Demo only'],studentHome:['生徒ホーム','Student home'],teacherHome:['先生ホーム','Teacher home'],adminHome:['管理者ホーム','Admin home'],studentHomeDesc:['基本情報から順番に確認し、条件に合う先生を探します。','Review your details step by step and search for teachers.'],teacherHomeDesc:['専門分野・大学対応情報・学習歴を登録します。','Manage subjects, university knowledge, and academic history.'],adminHomeDesc:['テストデータと項目の削除申請を管理します。','Manage test accounts and catalog removal requests.'],startStudent:['先生を探す','Find a teacher'],openTeacher:['先生画面を開く','Open teacher view'],openAdmin:['管理画面を開く','Open admin'],studentAbout:['大学・学部・学科、興味分野、職業から非AIで先生を探し、Teamsへの申込文を生成します。','Rule-based matching using university, faculty, department, subjects, and careers. Create a message to send via Teams.'],teacherAboutText:['専門分野を複数選び、専攻歴と相談対応できる範囲を別々に登録します。','Select multiple fields and record academic history separately from subjects you can advise on.'],adminAbout:['学校での運用には正式な本人認証と共有データベースが必要です。','Real deployment requires secure authentication and a shared database.'],studentGroup:['生徒','Student'],teacherGroup:['先生','Teacher'],adminGroup:['管理者','Admin'],purposeRequired:['相談目的を選択してください。','Choose a consultation goal.'],searchNeeded:['大学情報、専門分野、職業のいずれかを入力してください。','Enter at least a university detail, subject, or career.'],currentSearch:['検索条件','Search criteria'],emptyList:['まだ登録がありません。','Nothing registered yet.'],setYear:['確認年','Checked'],consultKind:['相談範囲','Scope'],sourcePersonal:['自身の経験','Personal experience'],dataNotSync:['別端末では共有されません。','Not shared across devices.'],langHeading:['表示言語','Display language']};
+let lang='ja';
+const t=k=>{const d=DICT[k];return d?d[lang==='ja'?0:1]:k};
+const translatePair=(arr,key=1)=>arr.find(a=>a[0]===key);
+const pairLabel=(pairs,id)=>{const p=pairs.find(x=>x[0]===id);return p?(p[lang==='ja'?1:2]||p[1]):id};
+const catLabel=id=>{const c=allCategories().find(x=>x.id===id);return c?(lang==='ja'?c.ja:c.en||c.ja):id};
+const topicLabel=x=>(lang==='ja'?x.ja:x.en||x.ja);
+const careerLabel=x=>(lang==='ja'?x.ja:x.en||x.ja);
+const academicYear=()=>{const d=new Date();return d.getFullYear()-(d.getMonth()<3?1:0)};
+const baseTopics=RAW_TOPICS.map((x,i)=>({id:'topic'+i,ja:x[1],en:x[0],groups:x[2].split(','),kind:'topic'}));
+const QUAL_GROUPS=['literature,education','literature,business','business','it','it','design','design,architecture','architecture','education','health','education','science,economics'];const baseQuals=QUALIFICATIONS.map((x,i)=>({id:'qual'+i,ja:x[0],en:x[1],groups:QUAL_GROUPS[i].split(','),kind:'qualification'}));
+const careers=RAW_CAREERS.map((x,i)=>({id:'career'+i,groupJa:x[0],groupEn:x[1],ja:x[2],en:x[3]}));
+const seedTeachers=[
+ {id:'T1001',name:'経済担当A先生（架空）',nameEn:'Economics Teacher A (demo)',purposes:['university','gradjob'],topicIds:['Microeconomics','Macroeconomics','Behavioral economics','Career guidance'],careers:['経営者','金融アナリスト'],intro:'経済学部の進学指導や学習内容について相談できます。',introEn:'Offers guidance on economics programs.',academic:[{university:'架空大学',major:'経済学',type:'primary',note:''}],support:[{uni:'立教大学',fac:'経済学部',dep:'',kind:'admissions',source:'guidance',year:'2026'}]},
+ {id:'T1002',name:'舞台担当B先生（架空）',nameEn:'Theatre Teacher B (demo)',purposes:['university','gradjob'],topicIds:['Acting','Voice acting','Performing arts education','Theatre direction'],careers:['声優','俳優'],intro:'舞台芸術・演技分野への進学について相談できます。',introEn:'Advises on performing arts and acting.',academic:[{university:'Demo Arts College',major:'Theatre',type:'primary',note:''}],support:[{uni:'桜美林大学',fac:'芸術文化学群',dep:'',kind:'admissions',source:'guidance',year:'2026'}]},
+ {id:'T1003',name:'デザイン担当C先生（架空）',nameEn:'Design Teacher C (demo)',purposes:['university','gradjob'],topicIds:['Interior design','Spatial design','Architectural design','Color theory'],careers:['インテリアデザイナー','建築士'],intro:'インテリア・住環境に関する相談に対応します。',introEn:'Supports interior and spatial design interests.',academic:[{university:'Sample University',major:'Nursing',type:'former',note:'専攻変更（架空）'},{university:'Sample University',major:'Interior Design',type:'primary',note:''}],support:[{uni:'',fac:'デザイン学部',dep:'インテリアデザイン学科',kind:'study',source:'academic',year:'2025'}]},
+ {id:'T1004',name:'情報担当D先生（架空）',nameEn:'IT Teacher D (demo)',purposes:['university','hsjob','gradjob'],topicIds:['Programming','Data science','Artificial intelligence','Statistics'],careers:['プログラマー','データサイエンティスト'],intro:'情報系の学部・職業相談に対応できます。',introEn:'Advises on IT studies and careers.',academic:[{university:'Demo Tech University',major:'Computer Science',type:'primary',note:''}],support:[{uni:'',fac:'情報学部',dep:'',kind:'general',source:'guidance',year:'2026'}]},
+ {id:'T1005',name:'医療担当E先生（架空）',nameEn:'Health Teacher E (demo)',purposes:['university','hsjob','gradjob'],topicIds:['Nursing','Medicine','Public health','Social welfare'],careers:['看護師','医師'],intro:'医療・看護・福祉系進学の相談ができます。',introEn:'Supports healthcare and nursing pathways.',academic:[{university:'Sample Nursing School',major:'Nursing',type:'primary',note:''}],support:[{uni:'',fac:'看護学部',dep:'',kind:'admissions',source:'guidance',year:'2026'}]} ];
+function prepTeacher(x){return {id:x.id,name:x.name,nameEn:x.nameEn||'',purposes:x.purposes||[],topicIds:baseTopics.filter(s=>(x.topicIds||[]).includes(s.en)).map(s=>s.id),careerIds:careers.filter(c=>(x.careers||[]).includes(c.ja)).map(c=>c.id),freeTopics:'',freeCareers:'',intro:x.intro||'',introEn:x.introEn||'',publicNote:'',academic:x.academic||[],support:x.support||[]}}
+function defaultDb(){return {teachers:seedTeachers.map(prepTeacher),studentIds:['S1001','S1002'],categories:[],subcategories:[],customItems:[],deletionRequests:[],schedule:{}}}
+function loadDb(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&Array.isArray(d.teachers)&&Array.isArray(d.studentIds)){for(const key of ['categories','subcategories','customItems','deletionRequests'])if(!Array.isArray(d[key]))d[key]=[];if(!d.schedule||typeof d.schedule!=='object')d.schedule={};return d}}catch(e){}return defaultDb()}
+let db=loadDb();
+function saveDb(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){return false}}
+function studentKey(){return 'teacher_matching_fresh_student_'+session?.id}
+function blankStudent(){return {name:'',grade:'',klass:'',purpose:'',uni:{uni:'',fac:'',dep:''},topicIds:[],careerIds:[],freeTopics:'',freeCareers:'',year:academicYear()}}
+function loadStudent(){try{const raw=JSON.parse(localStorage.getItem(studentKey())||'null');if(raw&&typeof raw==='object'&&typeof raw.name==='string'){return {...blankStudent(),...raw,uni:{...blankStudent().uni,...(raw.uni||{})},topicIds:Array.isArray(raw.topicIds)?raw.topicIds:[],careerIds:Array.isArray(raw.careerIds)?raw.careerIds:[]}}}catch(e){}return blankStudent()}
+let session=null;let student=blankStudent();let active='login',step=1,teacherDraft=null,selectedTime=null,openedSchedule=null,weekOffset=0;
+const show=(id,on)=>$(id)?.classList.toggle('hide',!on);
+function setStatus(id,s,err=false){const el=$(id);if(!el)return;el.textContent=s||'';el.classList.toggle('error',err)}
+function saveStudent(){try{student.year=academicYear();localStorage.setItem(studentKey(),JSON.stringify(student));return true}catch(e){return false}}
+function allCategories(){return [...CATEGORIES.map(x=>({id:x[0],ja:x[1],en:x[2]})),...db.categories]}
+function allTopics(){return [...baseTopics,...baseQuals,...db.customItems.filter(x=>x.kind==='topic'||x.kind==='qualification')]}
+function allChoices(){return allTopics()}
+function findTopic(id){return allTopics().find(x=>x.id===id)}
+function findCareer(id){return careers.find(x=>x.id===id)}
+function opt(select,items,prompt,selected){select.replaceChildren();select.add(new Option(prompt,''));for(const item of items){select.add(new Option(item.label,item.value))}if(selected!==undefined)select.value=selected}
+function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
+function addBtn(text,fn,cls='btn secondary sm'){const b=node('button',cls,text);b.type='button';b.addEventListener('click',fn);return b}
+function fillStatic(){document.documentElement.lang=lang;document.querySelectorAll('[data-i18n]').forEach(el=>{if(el.id==='brand')return;el.textContent=t(el.dataset.i18n)});const brand=document.querySelector('.brand');brand.firstChild.textContent=t('brand');document.querySelectorAll('[data-placeholder]').forEach(el=>el.placeholder=t(el.dataset.placeholder));$('version-label').textContent='A / v1.0'.replace('A',EDITION);$('lang-ja').classList.toggle('current',lang==='ja');$('lang-en').classList.toggle('current',lang==='en');$('lang-ja').setAttribute('aria-pressed',lang==='ja');$('lang-en').setAttribute('aria-pressed',lang==='en');$('footer').textContent=(lang==='ja'?'非AI・端末内デモ':'Rule-based local-only demo')+' · Edition '+EDITION+' v1.0';$('nav-back').textContent=t('back');$('nav-home').textContent=t('home');}
+function roleText(role){return t(role==='student'?'studentGroup':role==='teacher'?'teacherGroup':'adminGroup')}
+function view(page){if(page!=='login'&&!session)return;active=page;document.querySelectorAll('section.screen').forEach(el=>el.classList.toggle('active',el.id===page));show('session-strip',!!session);show('bottom-nav',!!session&&page!=='login');document.body.classList.toggle('with-nav',!!session&&page!=='login');$('session-label').textContent=session?roleText(session.role)+' / '+session.id+' ('+t('testOnly')+')':'';refreshNav();window.scrollTo(0,0)}
+function refreshNav(){const back=$('nav-back'),next=$('nav-next');back.disabled=active==='home'||active==='login';next.disabled=active==='login'||active==='teacher'||active==='admin'||(active==='student'&&step===4);next.textContent=active==='student'&&step===3?t('searchTeachers'):t('next')}
+function renderHome(){if(!session)return;const p=session.role;const key=p==='student'?'student':p==='teacher'?'teacher':'admin';$('home-title').textContent=t(key+'Home');$('home-desc').textContent=t(key+'HomeDesc');$('home-open').textContent=t(p==='student'?'startStudent':p==='teacher'?'openTeacher':'openAdmin');$('home-about').textContent=t(p==='student'?'studentAbout':p==='teacher'?'teacherAboutText':'adminAbout');}
+function enterMain(){if(!session)return;if(session.role==='student'){enterStudent();return}if(session.role==='teacher'){teacherDraft=deep(db.teachers.find(x=>x.id===session.id)||db.teachers[0]);renderTeacher();view('teacher');return}renderAdmin();view('admin')}
+function enterStudent(){student=loadStudent();if(student.year!==academicYear()){student.grade='';student.klass='';show('new-year-msg',true)}else show('new-year-msg',false);fillStudentIdentity();step=1;renderStep();view('student')}
+function login(id){const x=clean(id).toUpperCase();let role='';if(db.studentIds.includes(x))role='student';else if(db.teachers.some(u=>u.id===x))role='teacher';else if(x==='A1001')role='admin';if(!role){setStatus('login-msg',t('unknownId'),true);return}session={id:x,role};try{sessionStorage.setItem(SKEY,x)}catch(e){}setStatus('login-msg','');renderHome();view('home')}
+function logout(){session=null;teacherDraft=null;try{sessionStorage.removeItem(SKEY)}catch(e){}view('login')}
+function fillStudentIdentity(){$('student-name').value=student.name;$('student-class').value=student.klass;opt($('student-grade'),['中学1年','中学2年','中学3年','高校1年','高校2年','高校3年'].map((x,i)=>({value:x,label:lang==='ja'?x:['Junior high 1','Junior high 2','Junior high 3','High school 1','High school 2','High school 3'][i]})),t('selectAtLeast'),student.grade)}
+function stages(){return student.purpose==='hsjob'?[1,2,3]:[1,2,2.5,3]}
+function renderStep(){const stagesNow=stages(),labels={1:t('basic'),2:t('purpose'),2.5:t('university'),3:t('interests')};for(const n of [1,2,2.5,3,4])$('step-'+(n===2.5?'uni':n)).classList.toggle('active',step===n);const prog=$('progress');prog.replaceChildren();stagesNow.forEach((n,i)=>{const s=node('span','bar'+(i<=stagesNow.indexOf(step)||step===4?' on':''));prog.append(s)});prog.append(node('span','label',step===4?t('resultsTitle'):(stagesNow.indexOf(step)+1)+' / '+stagesNow.length+' '+labels[step]));for(const n of stagesNow){const el=$('step-label-'+(n===2.5?'uni':n));if(el)el.textContent=t('step')+' '+(stagesNow.indexOf(n)+1)+' / '+stagesNow.length}if(step===2)renderPurposes();if(step===2.5)renderStudentUni();if(step===3){renderStudentSearch();}if(step===4)renderResults();refreshNav();window.scrollTo(0,0)}
+function nextStudent(){if(step===1){const nm=clean($('student-name').value),gr=$('student-grade').value,cl=clean($('student-class').value);if(!nm||!gr||!cl){setStatus('student-identity-status',t('requiredIdentity'),true);return}student.name=nm;student.grade=gr;student.klass=cl;saveStudent();setStatus('student-identity-status','');step=2;renderStep();return}if(step===2){if(!student.purpose){alert(t('purposeRequired'));return}step=student.purpose==='hsjob'?3:2.5;renderStep();return}if(step===2.5){for(const field of ['uni','fac','dep']){const input=$('student-uni-'+field),cb=$('student-uni-'+field+'-undecided');if(!cb.checked&&!clean(input.value)){setStatus('university-msg',t('enterUni'),true);input.focus();return}student.uni[field]=cb.checked?'':clean(input.value)}saveStudent();setStatus('university-msg','');step=3;renderStep();return}if(step===3){if(!hasCriteria()){setStatus('student-search-status',t('searchNeeded'),true);return}saveStudent();setStatus('student-search-status','');step=4;renderStep()}}
+function hasCriteria(){return (student.purpose!=='hsjob'&&Object.values(student.uni).some(Boolean))||student.topicIds.length>0||student.careerIds.length>0||lines(student.freeTopics).length>0||lines(student.freeCareers).length>0}
+function backStudent(){if(step===1){view('home');return}if(step===4)step=3;else if(step===3)step=student.purpose==='hsjob'?2:2.5;else if(step===2.5)step=2;else step=1;renderStep()}
+function renderPurposes(){const host=$('purpose-choices');host.replaceChildren();for(const p of PURPOSES){const btn=node('button','choice'+(student.purpose===p[0]?' active':''));btn.type='button';btn.setAttribute('aria-pressed',student.purpose===p[0]);btn.append(node('strong','',lang==='ja'?p[1]:p[2]));const sub=p[0]==='university'?['大学や入試を相談する','Discuss universities and admissions']:p[0]==='hsjob'?['高校卒業後の就職先を相談する','Discuss employment after high school']:['将来の職業・学びを相談する','Discuss future career and studies'];btn.append(node('span','',sub[lang==='ja'?0:1]));btn.onclick=()=>{student.purpose=p[0];saveStudent();renderPurposes()};host.append(btn)}}
+function renderStudentUni(){const host=$('student-uni-fields');host.replaceChildren();for(const [key,label] of [['uni','uniName'],['fac','faculty'],['dep','department']]){const field=node('div','university-row');const lbl=node('label','label',t(label));lbl.setAttribute('for','student-uni-'+key);field.append(lbl);const grid=node('div','row');const input=node('input','control');input.id='student-uni-'+key;input.maxLength=80;input.style.flex='1 1 225px';input.value=student.uni[key]||'';const cbLbl=node('label','undecided'),cb=node('input');cb.type='checkbox';cb.id='student-uni-'+key+'-undecided';cb.checked=!input.value;input.disabled=cb.checked;cbLbl.append(cb,document.createTextNode(t('undecided')));cb.onchange=()=>{input.disabled=cb.checked;if(cb.checked){input.value='';student.uni[key]=''}else input.focus();saveStudent()};input.oninput=()=>{student.uni[key]=clean(input.value);saveStudent()};grid.append(input,cbLbl);field.append(grid);host.append(field)}}
+function fillCategories(select){const old=select.value;opt(select,allCategories().map(c=>({value:c.id,label:catLabel(c.id)})),t('allCats'),old)}
+function fillCareers(select){const old=select.value,groups=[...new Map(careers.map(c=>[c.groupJa,[c.groupJa,c.groupEn]])).values()];opt(select,groups.map(g=>({value:g[0],label:lang==='ja'?g[0]:g[1]})),t('allCareers'),old)}
+function renderCheckboxList(kind,who){const isTopic=kind==='topic',s=who==='student'?student:teacherDraft,host=$(who+'-'+(isTopic?'topic':'career')+'-list'),query=norm($(who+'-'+(isTopic?'topic':'career')+'-query').value),category=$(who+'-'+(isTopic?'category':'career-cat')).value,items=isTopic?allChoices():careers,sel=isTopic?s.topicIds:s.careerIds;host.replaceChildren();const matching=items.filter(x=>(!category||(isTopic?x.groups.includes(category):x.groupJa===category))&&(!query||norm(x.ja).includes(query)||norm(x.en).includes(query))).sort((a,b)=>topicLabel(a).localeCompare(topicLabel(b),lang==='ja'?'ja':'en'));for(const x of matching.slice(0,140)){const lab=node('label','check'),cb=node('input');cb.type='checkbox';cb.checked=sel.includes(x.id);cb.onchange=()=>{const arr=isTopic?s.topicIds:s.careerIds;const index=arr.indexOf(x.id);if(cb.checked&&index<0)arr.push(x.id);if(!cb.checked&&index>=0)arr.splice(index,1);renderSelectedChips(who,kind);if(who==='student')saveStudent()};lab.append(cb,node('span','',isTopic?topicLabel(x):careerLabel(x)));host.append(lab)}if(!matching.length)host.append(node('div','empty',t('noHits')));if(isTopic)$(who+'-topic-count').textContent=t('showing')+' '+Math.min(matching.length,140)+' / '+t('topicTotal')+' '+items.length}
+function renderSelectedChips(who,kind){const s=who==='student'?student:teacherDraft,isTopic=kind==='topic',ids=isTopic?s.topicIds:s.careerIds,host=$(who+'-'+(isTopic?'topic':'career')+'-selected');host.replaceChildren();for(const id of ids){const x=isTopic?findTopic(id):findCareer(id);if(!x)continue;const c=node('span','chip');c.append(document.createTextNode(isTopic?topicLabel(x):careerLabel(x)));const b=node('button','','×');b.type='button';b.setAttribute('aria-label',t('remove'));b.onclick=()=>{const i=ids.indexOf(id);if(i>=0)ids.splice(i,1);renderCheckboxList(kind,who);renderSelectedChips(who,kind);if(who==='student')saveStudent()};c.append(b);host.append(c)}if(ids.length===0)host.append(node('span','small',isTopic?t('noTopics'):t('none')))}
+function renderStudentSearch(){const uni=(student.purpose==='hsjob'?[]:Object.entries(student.uni).filter(([k,v])=>v).map(([k,v])=>v));$('student-condition-summary').textContent=t('currentSearch')+'：'+(uni.length?uni.join(' / '):t('none'))+' · '+pairLabel(PURPOSES,student.purpose);for(const kind of ['topic','career']){const s=kind==='topic'?'student-category':'student-career-cat';if(kind==='topic')fillCategories($(s));else fillCareers($(s));renderCheckboxList(kind,'student');renderSelectedChips('student',kind)}$('student-free-topics').value=student.freeTopics||'';$('student-free-careers').value=student.freeCareers||'';}
+function courseMatches(query,value){return !!(query&&value&&norm(query)===norm(value))}
+function matchTeacher(teach){if(!teach.purposes.includes(student.purpose))return null;const uniQuery=student.purpose!=='hsjob'&&Object.values(student.uni).some(Boolean),provided=['uni','fac','dep'].filter(k=>student.uni[k]);let bestUni={score:0,reasons:[],all:false,record:null};if(uniQuery)for(const rec of teach.support||[]){let score=0,reasons=[],blocked=false;for(const [field,weight,key] of [['uni',72,'universityReason'],['fac',30,'facultyReason'],['dep',34,'deptReason']]){const q=student.uni[field],v=rec[field];if(!q)continue;if(v){if(courseMatches(q,v)){score+=weight;reasons.push(key)}else if(field==='uni'){blocked=true;break}}}if(blocked)continue;const all=provided.every(k=>rec[k]&&courseMatches(student.uni[k],rec[k]));if(score>bestUni.score)bestUni={score,reasons,all,record:rec}}const exactTopics=(teach.topicIds||[]).filter(id=>student.topicIds.includes(id));const exactCareers=(teach.careerIds||[]).filter(id=>student.careerIds.includes(id));const freeTopics=lines(student.freeTopics).filter(q=>lines(teach.freeTopics).some(s=>norm(s)===norm(q)));const freeCareers=lines(student.freeCareers).filter(q=>lines(teach.freeCareers).some(s=>norm(s)===norm(q)));const score=bestUni.score+exactTopics.length*16+exactCareers.length*21+freeTopics.length*12+freeCareers.length*14;if(!score)return null;return {teacher:teach,score,uni:bestUni,topics:exactTopics,careers:exactCareers,freeTopics,freeCareers,related:bestUni.score===0&&uniQuery}}
+function renderResults(){show('teams-box',false);const results=db.teachers.map(matchTeacher).filter(Boolean).sort((a,b)=>b.score-a.score),host=$('match-results');host.replaceChildren();const cond=[...(student.purpose==='hsjob'?[]:Object.values(student.uni).filter(Boolean)),...student.topicIds.map(id=>findTopic(id)).filter(Boolean).map(topicLabel),...student.careerIds.map(id=>findCareer(id)).filter(Boolean).map(careerLabel),...lines(student.freeTopics),...lines(student.freeCareers)];$('match-summary').textContent=t('currentSearch')+'：'+(cond.join(' / ')||t('none'))+' · '+t('sortInfo');if(!results.length){host.append(node('div','empty',t('noHits')));return}for(const result of results){const teach=result.teacher,card=node('article','teacher-result');const header=node('div','title-line');header.append(node('h3','',lang==='en'&&teach.nameEn?teach.nameEn:teach.name));header.append(node('span','pill '+(result.uni.all&&result.uni.score?'good':''),result.uni.score?(result.uni.all?t('matchedAll'):t('partialUni')):t('relatedOnly')));card.append(header);if(teach.intro||teach.introEn)card.append(node('p','',lang==='en'?(teach.introEn||teach.intro):(teach.intro||teach.introEn)));const reasons=node('div','reasons');for(const key of result.uni.reasons)reasons.append(node('span','reason',t(key)));for(const id of result.topics)reasons.append(node('span','reason',t('topicReason')+'：'+topicLabel(findTopic(id))));for(const id of result.careers)reasons.append(node('span','reason',t('careerReason')+'：'+careerLabel(findCareer(id))));for(const s of [...result.freeTopics,...result.freeCareers])reasons.append(node('span','reason',t('otherReason')+'：'+s));card.append(reasons);if(result.related)card.append(node('p','small',t('noUniMatch')));const details=node('details');details.append(node('summary','',t('previewDetails')));const detailTopics=(teach.topicIds||[]).map(id=>findTopic(id)).filter(Boolean).map(topicLabel);const detailCareers=(teach.careerIds||[]).map(id=>findCareer(id)).filter(Boolean).map(careerLabel);const info=[t('topicSelectTitle')+'：'+(detailTopics.join('、')||t('none')),t('careerTitle')+'：'+(detailCareers.join('、')||t('none'))];for(const infoText of info)details.append(node('p','',infoText));for(const rec of teach.support||[])details.append(node('p','',t('supportTag')+'：'+[rec.uni,rec.fac,rec.dep].filter(Boolean).join(' / ')+' ｜'+pairLabel(SUPPORT_KINDS,rec.kind)+' ｜'+pairLabel(SOURCE_TYPES,rec.source)));for(const rec of teach.academic||[])details.append(node('p','',t('historyTag')+'：'+[rec.university,rec.major].filter(Boolean).join(' / ')+' ｜'+pairLabel(STUDY_TYPES,rec.type)));if(teach.publicNote)details.append(node('p','',teach.publicNote));card.append(details);const actions=node('div','row');if(EDITION==='B'){actions.append(addBtn(t('teacherScheduleBtn'),()=>{openedSchedule=openedSchedule===teach.id?null:teach.id;selectedTime=null;weekOffset=0;renderResults();if(openedSchedule){const panel=$('schedule-for-'+teach.id);panel?.scrollIntoView({behavior:'smooth',block:'nearest'})}}))}else actions.append(addBtn(t('teacherMessage'),()=>prepareTeams(teach)));card.append(actions);if(EDITION==='B'&&openedSchedule===teach.id){const panel=node('div','');panel.id='schedule-for-'+teach.id;card.append(panel);renderSchedule(panel,teach.id,false)}host.append(card)}}
+function localDate(d){return lang==='ja'?`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+const DAYS_JA=['日','月','火','水','木','金','土'],DAYS_EN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function weekStart(offset){const now=new Date(),d=new Date(now.getFullYear(),now.getMonth(),now.getDate());d.setDate(d.getDate()-(d.getDay()+6)%7+offset*7);return d}
+function dateAdd(day,i){const x=new Date(day);x.setDate(x.getDate()+i);return x}
+function slotKey(teacherId,date,time){return teacherId+'|'+dateKey(date)+'|'+time}
+function defaultAvailability(id,date,index){const h=(id.charCodeAt(id.length-1)+date.getDate()*3+index*7+date.getDay()*11)%13;if(date.getDay()===0)return 'busy';return h<5?'available':h<8?'unknown':'busy'}
+const STATES=['available','unknown','busy'],MARKS={available:'○',unknown:'△',busy:'×'};
+function availability(id,date,time,index){return db.schedule[slotKey(id,date,time)]||defaultAvailability(id,date,index)}
+function renderSchedule(host,teacherId,editing){host.replaceChildren();host.append(node('p','small',t('slotDemo')));const start=weekStart(weekOffset),header=node('div','row');header.style.margin='11px 0';header.append(addBtn('‹ '+t('prevWeek'),()=>{weekOffset--;renderSchedule(host,teacherId,editing)}));header.append(node('strong','small',localDate(start)+' — '+localDate(dateAdd(start,6))));header.append(addBtn(t('nextWeek')+' ›',()=>{weekOffset++;renderSchedule(host,teacherId,editing)}));header.append(addBtn(t('weekThis'),()=>{weekOffset=0;renderSchedule(host,teacherId,editing)}));host.append(header);const scroll=node('div','box-scroll'),table=node('table','calendar');const thead=node('thead'),tr=node('tr'),th=node('th','time',lang==='ja'?'時間':'Time');tr.append(th);for(let i=0;i<7;i++){const d=dateAdd(start,i);tr.append(node('th','',`${lang==='ja'?DAYS_JA[d.getDay()]:DAYS_EN[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`))}thead.append(tr);table.append(thead);const tbody=node('tbody');let index=0;for(let hour=10;hour<17;hour++)for(const minute of [0,15,30,45]){const time=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0'),r=node('tr');r.append(node('th','time',time));for(let i=0;i<7;i++){const d=dateAdd(start,i),key=slotKey(teacherId,d,time),s=availability(teacherId,d,time,index),cell=node('td'),b=node('button','s-'+s+(editing?' cell-edit':'')+(selectedTime?.key===key?' selected':''),MARKS[s]);b.type='button';b.title=(editing?`${localDate(d)} ${time} : ${MARKS[s]}`:t('scheduleSelect'));b.setAttribute('aria-label',b.title);if(!editing&&(s==='busy'||(new Date(d.getFullYear(),d.getMonth(),d.getDate(),hour,minute)<new Date())))b.disabled=true;b.onclick=()=>{if(editing){const next=STATES[(STATES.indexOf(availability(teacherId,d,time,index))+1)%3];db.schedule[key]=next;saveDb();renderSchedule(host,teacherId,true)}else{selectedTime={key,label:localDate(d)+' '+time,time,mark:MARKS[s]};renderSchedule(host,teacherId,false)}};cell.append(b);r.append(cell)}tbody.append(r);index++}table.append(tbody);scroll.append(table);host.append(scroll);if(!editing){host.append(node('p','small',selectedTime?t('timeSelected')+'：'+selectedTime.label+' '+selectedTime.mark:t('scheduleSelect')));host.append(node('p','small',t('scheduleUnknown')));const b=addBtn(t('requestTime'),()=>{const tch=db.teachers.find(x=>x.id===teacherId);if(!selectedTime){alert(t('needTime'));return}prepareTeams(tch,selectedTime.label+' '+selectedTime.mark)},'btn');b.disabled=!selectedTime;host.append(b)}}
+function prepareTeams(teacher,slot=''){const names=[teacher.name,lang==='en'&&teacher.nameEn?teacher.nameEn:''].filter(Boolean);const uni=student.purpose==='hsjob'?t('none'):[student.uni.uni,student.uni.fac,student.uni.dep].filter(Boolean).join(' / ')||t('undecided'),topicText=[...student.topicIds.map(id=>findTopic(id)).filter(Boolean).map(topicLabel),...lines(student.freeTopics)].join('、')||t('none'),careerText=[...student.careerIds.map(id=>findCareer(id)).filter(Boolean).map(careerLabel),...lines(student.freeCareers)].join('、')||t('none');const text=lang==='ja'?`${teacher.name} 先生\n\n進路相談をお願いしたく、ご連絡しました。\n\n氏名：${student.name}\n学年・クラス：${student.grade} ${student.klass}\n相談目的：${pairLabel(PURPOSES,student.purpose)}\n大学・学部・学科：${uni}\n興味分野：${topicText}\n目指す職業：${careerText}${slot?'\n希望日時：'+slot:''}\n\nご都合が合いましたら、相談可能な日時をご教示いただけますと幸いです。\nよろしくお願いいたします。`:`Dear ${teacher.nameEn||teacher.name},\n\nI would like to request a school guidance consultation.\n\nName: ${student.name}\nGrade / class: ${student.grade} ${student.klass}\nConsultation goal: ${pairLabel(PURPOSES,student.purpose)}\nUniversity / faculty / department: ${uni}\nSubjects: ${topicText}\nCareer interests: ${careerText}${slot?'\nPreferred date and time: '+slot:''}\n\nCould you please let me know if a meeting is possible? Thank you.`;$('teams-text').value=text;show('teams-box',true);setStatus('copy-msg',t('messagePrepared'));$('teams-box').scrollIntoView({behavior:'smooth',block:'start'})}
+function hydrateTeacher(){if(!session||session.role!=='teacher')return;teacherDraft=deep(db.teachers.find(x=>x.id===session.id));if(!teacherDraft)return;teacherDraft.topicIds=teacherDraft.topicIds||[];teacherDraft.careerIds=teacherDraft.careerIds||[];teacherDraft.purposes=teacherDraft.purposes||[];teacherDraft.academic=teacherDraft.academic||[];teacherDraft.support=teacherDraft.support||[]}
+function renderTeacher(){if(!teacherDraft)hydrateTeacher();if(!teacherDraft)return;$('teacher-name').value=teacherDraft.name;$('teacher-name-en').value=teacherDraft.nameEn||'';$('teacher-about').value=teacherDraft.intro||'';$('teacher-public').value=teacherDraft.publicNote||'';$('teacher-free-topics').value=teacherDraft.freeTopics||'';$('teacher-free-careers').value=teacherDraft.freeCareers||'';const purpose=$('teacher-purpose-list');purpose.replaceChildren();for(const p of PURPOSES){const l=node('label','check'),c=node('input');c.type='checkbox';c.checked=teacherDraft.purposes.includes(p[0]);c.onchange=()=>{const i=teacherDraft.purposes.indexOf(p[0]);if(c.checked&&i<0)teacherDraft.purposes.push(p[0]);if(!c.checked&&i>=0)teacherDraft.purposes.splice(i,1)};l.append(c,node('span','',lang==='ja'?p[1]:p[2]));purpose.append(l)}for(const kind of ['topic','career']){if(kind==='topic')fillCategories($('teacher-category'));else fillCareers($('teacher-career-cat'));renderCheckboxList(kind,'teacher');renderSelectedChips('teacher',kind)}renderHistory();renderTeacherSupport();renderCatalogAdds();if(EDITION==='B'){show('teacher-schedule-card',true);weekOffset=0;renderSchedule($('teacher-schedule'),session.id,true)}else show('teacher-schedule-card',false)}
+function commitTeacher(){if(!teacherDraft)return;const name=clean($('teacher-name').value);if(!name||!teacherDraft.purposes.length){setStatus('teacher-save-msg',t('requiredIdentity')+' / '+t('purposeRequired'),true);return}teacherDraft.name=name;teacherDraft.nameEn=clean($('teacher-name-en').value);teacherDraft.intro=clean($('teacher-about').value);teacherDraft.publicNote=clean($('teacher-public').value);teacherDraft.freeTopics=$('teacher-free-topics').value.slice(0,400);teacherDraft.freeCareers=$('teacher-free-careers').value.slice(0,400);const idx=db.teachers.findIndex(x=>x.id===session.id);if(idx<0)return;db.teachers[idx]=deep(teacherDraft);setStatus('teacher-save-msg',saveDb()?t('saved'):t('saveFailed'),!localStorage.getItem(KEY))}
+function renderHistory(){const host=$('history-list');host.replaceChildren();if(!teacherDraft.academic.length)host.append(node('p','small',t('emptyList')));teacherDraft.academic.forEach((a,i)=>{const div=node('div','university-entry');div.append(node('strong','',a.university+' / '+a.major));div.append(node('p','small',pairLabel(STUDY_TYPES,a.type)+(a.note?' · '+a.note:'')));div.append(addBtn(t('remove'),()=>{teacherDraft.academic.splice(i,1);commitTeacher();renderHistory()},'btn danger sm'));host.append(div)});opt($('history-type'),STUDY_TYPES.map(p=>({value:p[0],label:pairLabel(STUDY_TYPES,p[0])})),t('selectAtLeast'),$('history-type').value||'primary')}
+function addHistory(){const uni=clean($('history-university').value),major=clean($('history-major').value);if(!uni||!major){setStatus('history-msg',t('needHistory'),true);return}teacherDraft.academic.push({university:uni,major,type:$('history-type').value||'coursework',note:clean($('history-note').value)});commitTeacher();for(const id of ['history-university','history-major','history-note'])$(id).value='';setStatus('history-msg',t('saved'));renderHistory()}
+function renderTeacherSupport(){const host=$('teacher-uni-list');host.replaceChildren();if(!teacherDraft.support.length)host.append(node('p','small',t('emptyList')));teacherDraft.support.forEach((a,i)=>{const div=node('div','university-entry');div.append(node('strong','',[a.uni,a.fac,a.dep].filter(Boolean).join(' / ')));div.append(node('p','small',pairLabel(SUPPORT_KINDS,a.kind)+' · '+pairLabel(SOURCE_TYPES,a.source)+(a.year?' · '+t('setYear')+' '+a.year:'')));div.append(addBtn(t('remove'),()=>{teacherDraft.support.splice(i,1);commitTeacher();renderTeacherSupport()},'btn danger sm'));host.append(div)});const oldk=$('support-kind').value,olds=$('support-source').value;opt($('support-kind'),SUPPORT_KINDS.map(x=>({value:x[0],label:pairLabel(SUPPORT_KINDS,x[0])})),t('selectAtLeast'),oldk||'admissions');opt($('support-source'),SOURCE_TYPES.map(x=>({value:x[0],label:pairLabel(SOURCE_TYPES,x[0])})),t('selectAtLeast'),olds||'guidance')}
+function addSupport(){const v={uni:clean($('support-uni').value),fac:clean($('support-fac').value),dep:clean($('support-dep').value),kind:$('support-kind').value,source:$('support-source').value,year:clean($('support-year').value)};if(!v.uni&&!v.fac&&!v.dep){setStatus('support-msg',t('needSupport'),true);return}teacherDraft.support.push(v);commitTeacher();for(const id of ['support-uni','support-fac','support-dep','support-year'])$(id).value='';setStatus('support-msg',t('saved'));renderTeacherSupport()}
+function renderCatalogAdds(){const kind=$('catalog-kind').value||'topic',oldp=$('catalog-parent').value;opt($('catalog-kind'),[['category','catalogCategory'],['subcategory','catalogSubcategory'],['topic','catalogTopic'],['qualification','catalogQualification']].map(([id,k])=>({value:id,label:t(k)})),t('selectAtLeast'),kind);opt($('catalog-parent'),allCategories().map(c=>({value:c.id,label:catLabel(c.id)})),t('selectAtLeast'),oldp);const p=$('catalog-parent').value,oldsub=$('catalog-sub').value;opt($('catalog-sub'),db.subcategories.filter(s=>s.category===p).map(s=>({value:s.id,label:lang==='ja'?s.ja:s.en||s.ja})),t('selectAtLeast'),oldsub);show('catalog-add-category-box',kind!=='category');show('catalog-add-sub-box',kind==='topic');const host=$('my-additions');host.replaceChildren();for(const x of [...db.categories,...db.subcategories,...db.customItems].filter(x=>x.createdBy===session.id)){const div=node('div','row');div.style.margin='7px 0';div.append(node('span','small',(lang==='ja'?x.ja:x.en||x.ja)+' · '+t(x.kind==='category'?'catalogCategory':x.kind==='subcategory'?'catalogSubcategory':x.kind==='qualification'?'catalogQualification':'catalogTopic')));const requested=db.deletionRequests.some(r=>r.itemId===x.id);const btn=addBtn(t(requested?'requested':'requestDelete'),()=>{db.deletionRequests.push({id:uid(),itemId:x.id,requester:session.id});saveDb();renderCatalogAdds()});btn.disabled=requested;div.append(btn);host.append(div)}if(!host.children.length)host.append(node('p','small',t('emptyList')))}
+function addCatalogItem(){const type=$('catalog-kind').value,ja=clean($('catalog-ja').value),en=clean($('catalog-en').value)||ja,category=$('catalog-parent').value,sub=$('catalog-sub').value;if(!ja){setStatus('catalog-msg',t('needLabel'),true);return}if(type!=='category'&&!category){setStatus('catalog-msg',t('needParent'),true);return}const exists=[...allCategories(),...db.subcategories,...allTopics()].some(x=>norm(x.ja)===norm(ja)&&((x.kind||'')===type||type==='category'&&x.id));if(exists){setStatus('catalog-msg',t('duplicate'),true);return}const id='custom_'+uid(),base={id,ja,en,createdBy:session.id,kind:type};if(type==='category')db.categories.push({...base});else if(type==='subcategory')db.subcategories.push({...base,category});else db.customItems.push({...base,groups:[category],subcategory:sub});if(!saveDb()){setStatus('catalog-msg',t('saveFailed'),true);return}$('catalog-ja').value='';$('catalog-en').value='';setStatus('catalog-msg',t('catalogStatus'));renderCatalogAdds();fillCategories($('teacher-category'));renderCheckboxList('topic','teacher')}
+function renderAdmin(){const host=$('admin-deletions');host.replaceChildren();for(const req of db.deletionRequests){const x=[...db.categories,...db.subcategories,...db.customItems].find(s=>s.id===req.itemId);if(!x)continue;const div=node('div','university-entry');div.append(node('strong','',lang==='ja'?x.ja:x.en||x.ja));div.append(node('p','small',req.requester));div.append(addBtn(t('approve'),()=>{removeCatalogItem(req.itemId);db.deletionRequests=db.deletionRequests.filter(r=>r.id!==req.id);saveDb();renderAdmin()}));div.append(document.createTextNode(' '));div.append(addBtn(t('reject'),()=>{db.deletionRequests=db.deletionRequests.filter(r=>r.id!==req.id);saveDb();renderAdmin()},'btn ghost sm'));host.append(div)}if(!host.children.length)host.append(node('p','small',t('emptyList')));$('admin-counts').textContent=`${t('studentGroup')}: ${db.studentIds.length} / ${t('teacherGroup')}: ${db.teachers.length} / ${t('topicTotal')}: ${allTopics().length} / ${t('catalogCategory')}: ${allCategories().length}`}
+function removeCatalogItem(id){const removedCat=db.categories.find(x=>x.id===id);db.categories=db.categories.filter(x=>x.id!==id);db.subcategories=db.subcategories.filter(x=>x.id!==id&&(!removedCat||x.category!==id));db.customItems=db.customItems.filter(x=>x.id!==id&&(!removedCat||!x.groups.includes(id)));for(const teach of db.teachers)teach.topicIds=teach.topicIds.filter(x=>x!==id);db.deletionRequests=db.deletionRequests.filter(r=>r.itemId!==id);}
+function createAccount(kind){if(kind==='teacher'){const name=clean($('admin-teacher-name').value);if(!name){setStatus('admin-teacher-msg',t('needLabel'),true);return}let n=1001;while(db.teachers.some(x=>x.id==='T'+n))n++;const id='T'+n;db.teachers.push({id,name,nameEn:'',purposes:['university'],topicIds:[],careerIds:[],freeTopics:'',freeCareers:'',intro:'',introEn:'',publicNote:'',academic:[],support:[]});saveDb();$('admin-teacher-name').value='';setStatus('admin-teacher-msg',id+' · '+name)}else{let n=1001;while(db.studentIds.includes('S'+n))n++;const id='S'+n;db.studentIds.push(id);saveDb();setStatus('admin-student-msg',id)}renderAdmin()}
+function setLanguage(v){if(active==='teacher'&&teacherDraft){teacherDraft.name=$('teacher-name').value;teacherDraft.nameEn=$('teacher-name-en').value;teacherDraft.intro=$('teacher-about').value;teacherDraft.publicNote=$('teacher-public').value;teacherDraft.freeTopics=$('teacher-free-topics').value;teacherDraft.freeCareers=$('teacher-free-careers').value}if(active==='student'&&step===1){student.name=$('student-name').value;student.grade=$('student-grade').value;student.klass=$('student-class').value}if(active==='student'&&step===2.5){for(const k of ['uni','fac','dep'])student.uni[k]=$('student-uni-'+k+'-undecided').checked?'':$('student-uni-'+k).value}if(v!==lang){lang=v;try{localStorage.setItem(LKEY,v)}catch(e){}}fillStatic();if(session){renderHome();if(active==='student'){fillStudentIdentity();renderStep()}if(active==='teacher')renderTeacher();if(active==='admin')renderAdmin();}else view('login')}
+function initialize(){try{lang=localStorage.getItem(LKEY)==='en'?'en':'ja'}catch(e){}fillStatic();$('lang-ja').onclick=()=>setLanguage('ja');$('lang-en').onclick=()=>setLanguage('en');$('do-login').onclick=()=>login($('login-id').value);$('login-id').onkeydown=e=>{if(e.key==='Enter')login($('login-id').value)};document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{$('login-id').value=b.dataset.demo;$('login-id').focus()});$('logout').onclick=logout;$('home-open').onclick=enterMain;$('nav-home').onclick=()=>{renderHome();view('home')};$('nav-back').onclick=()=>active==='student'?backStudent():view('home');$('nav-next').onclick=()=>active==='home'?enterMain():active==='student'?nextStudent():null;$('redo-search').onclick=()=>{step=3;renderStep()};$('teams-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('teams-text').value);setStatus('copy-msg',t('copyDone'))}catch(e){$('teams-text').select();try{if(document.execCommand('copy'))setStatus('copy-msg',t('copyDone'));else setStatus('copy-msg',t('copyManual'),true)}catch(e){setStatus('copy-msg',t('copyManual'),true)}}};for(const who of ['student','teacher']){for(const kind of ['topic','career']){const q=$(who+'-'+kind+'-query'),cat=$(who+'-'+(kind==='topic'?'category':'career-cat'));q.oninput=()=>renderCheckboxList(kind,who);cat.onchange=()=>renderCheckboxList(kind,who)} }for(const key of ['topics','careers'])$('student-free-'+key).oninput=e=>{student['free'+(key[0].toUpperCase()+key.slice(1))]=e.target.value;saveStudent()};$('teacher-save').onclick=commitTeacher;$('history-add').onclick=addHistory;$('support-add').onclick=addSupport;$('catalog-kind').onchange=renderCatalogAdds;$('catalog-parent').onchange=renderCatalogAdds;$('catalog-add').onclick=addCatalogItem;$('admin-create-teacher').onclick=()=>createAccount('teacher');$('admin-create-student').onclick=()=>createAccount('student');try{const sid=sessionStorage.getItem(SKEY);if(sid){const role=db.studentIds.includes(sid)?'student':db.teachers.some(x=>x.id===sid)?'teacher':sid==='A1001'?'admin':null;if(role){session={id:sid,role};renderHome();view('home');return}}}catch(e){}view('login')}
+initialize();
 </script>
-</body>
-</html>
+</body></html>
