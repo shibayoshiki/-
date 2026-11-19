@@ -9,7 +9,8 @@ before(async () => {
   const assets = {
     '/': ['index.html', 'text/html'],
     '/b.html': ['b.html', 'text/html'],
-    '/app.js': ['app.js', 'text/javascript']
+    '/app.js': ['app.js', 'text/javascript'],
+    '/matching.js': ['matching.js', 'text/javascript']
   };
   server = createServer((request, response) => {
     const asset = assets[request.url];
@@ -182,7 +183,7 @@ test('自由入力は正規化後の重複を加点せず、別項目の配点�
     student.purpose = 'hsjob';
     student.freeTopics = 'Ａ・Ｂ、ab、別分野';
     student.freeCareers = '職業\n職　業';
-    return matchTeacher({ purposes: ['hsjob'], freeTopics: 'AB、別分野', freeCareers: '職業' });
+    return Matching.rank(student,[{ purposes: ['hsjob'], freeTopics: 'AB、別分野', freeCareers: '職業' }],allTopics(),careers)[0];
   });
   assert.equal(result.score, 12 * 2 + 14);
   assert.deepEqual(result.freeTopics, ['Ａ・Ｂ', '別分野']);
@@ -201,6 +202,7 @@ test('分類削除は子項目と選択参照だけを整理し、失敗時は�
       { id: 'shared', ja: '共通資格', groups: ['cat', 'it'], kind: 'qualification' }
     );
     data.teachers[0].topicIds = ['child', 'peer', 'shared'];
+    data.teachers[0].practiceTopicIds = ['child', 'peer'];
     data.deletionRequests.push({ id: 'subRequest', itemId: 'sub' }, { id: 'childRequest', itemId: 'child' }, { id: 'catRequest', itemId: 'cat' });
     localStorage.setItem(KEY, JSON.stringify(data));
     localStorage.setItem(STUDENT_PREFIX + 'S1001', JSON.stringify({ name: '架空 生徒', topicIds: ['child', 'peer', 'shared'], note: '保持' }));
@@ -223,6 +225,7 @@ test('分類削除は子項目と選択参照だけを整理し、失敗時は�
   }));
   let state = await read();
   assert.deepEqual(state.data.teachers[0].topicIds, ['peer', 'shared']);
+  assert.deepEqual(state.data.teachers[0].practiceTopicIds, ['peer']);
   assert.deepEqual(state.data.deletionRequests.map(x => x.id), ['catRequest']);
   assert.deepEqual(state.first, { name: '架空 生徒', topicIds: ['peer', 'shared'], note: '保持' });
 
@@ -230,6 +233,7 @@ test('分類削除は子項目と選択参照だけを整理し、失敗時は�
   await firstApprove.click();
   state = await read();
   assert.deepEqual(state.data.teachers[0].topicIds, ['shared']);
+  assert.deepEqual(state.data.teachers[0].practiceTopicIds, []);
   assert.deepEqual(state.data.customItems.map(x => [x.id, x.groups]), [['shared', ['it']]]);
   assert.deepEqual(state.first.topicIds, ['shared']);
   assert.deepEqual(state.second.topicIds, ['peer', 'shared']);
@@ -240,4 +244,56 @@ test('分類削除は子項目と選択参照だけを整理し、失敗時は�
   await enterIdentity(page);
   await page.click('#nav-next');
   assert.deepEqual((await read()).second.topicIds, ['shared']);
+}));
+
+test('A版とB版で同条件・同教員データの順位と推薦理由が一致', () => withPage(async page => {
+  const views = [];
+  for (const path of ['/', '/b.html']) {
+    await page.goto(baseUrl + path);
+    await login(page, 'T1001');
+    await page.fill('#support-uni', '架空星空大学');
+    await page.fill('#support-fac', '情報科学学部');
+    await page.fill('#support-dep', '情報工学学科');
+    await page.selectOption('#support-kind', 'study');
+    await page.selectOption('#support-source', 'attendance');
+    await page.click('#support-add');
+    assert.match(await page.locator('#support-msg').innerText(), /保存しました/);
+    await page.locator('#teacher-career-experience').locator('..').locator('summary').click();
+    const experience = page.locator('#teacher-career-experience input').first();
+    const career = await experience.locator('..').innerText();
+    await experience.check();
+    await page.click('#teacher-save');
+    await page.click('#logout');
+
+    await login(page, 'T1002');
+    await page.fill('#support-uni', '架空星空大学');
+    await page.check('#support-wide');
+    await page.click('#support-add');
+    assert.match(await page.locator('#teacher-uni-list').innerText(), /大学全般の相談に対応可能/);
+    await page.click('#logout');
+
+    await login(page, 'S1001');
+    await enterIdentity(page);
+    await page.click('#nav-next');
+    await page.locator('#purpose-choices button').first().click();
+    await page.selectOption('#student-university-intent', 'campus');
+    await page.click('#nav-next');
+    for (const [id, value] of [['uni', '架空星空大学'], ['fac', '情報科学学部'], ['dep', '情報工学学科']]) {
+      await page.uncheck('#student-uni-' + id + '-undecided');
+      await page.fill('#student-uni-' + id, value);
+    }
+    await page.click('#nav-next');
+    await page.fill('#student-free-careers', career.split('：')[1]);
+    await page.click('#nav-next');
+
+    const headings = await page.locator('#match-results article h3').allTextContents();
+    const reasons = await page.locator('#match-results article .reasons').allTextContents();
+    assert.equal(headings.length, 2);
+    assert.match(headings[0], /経済担当A/);
+    assert.match(reasons[0], /完全一致.*自身が在学・卒業した経験.*職業の実務経験/);
+    assert.match(reasons[1], /相談対応情報は未登録.*大学全般の相談に対応可能/);
+    views.push({ headings, reasons });
+    await page.click('#logout');
+  }
+  assert.deepEqual(views[0], views[1]);
 }));
