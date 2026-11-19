@@ -1,0 +1,11 @@
+{
+  "name": "teacher-matching-demo",
+  "private": true,
+  "scripts": {
+    "build:edition-b": "node scripts/build-edition-b.mjs",
+    "test": "node scripts/build-edition-b.mjs --check && node --test tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
