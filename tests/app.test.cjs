@@ -297,3 +297,67 @@ test('A版とB版で同条件・同教員データの順位と推薦理由が一
   }
   assert.deepEqual(views[0], views[1]);
 }));
+
+test('推薦カードの要約は一致した登録を示し、未登録・不一致・未確認を区別する', () => withPage(async page => {
+  await page.goto(baseUrl);
+  await page.evaluate(() => {
+    const data = defaultDb();
+    const acting = baseTopics.find(item => item.en === 'Acting').id;
+    const teacher = (id, name, support, practiceTopicIds = []) => ({
+      id, name, purposes: ['university'], topicIds: [acting], practiceTopicIds, support
+    });
+    data.teachers = [
+      teacher('T1011', '実技担当（架空）', [
+        { uni: '架空星空大学', kind: 'admissions', source: 'successfulGuidance' },
+        { uni: '架空別大学', fac: '舞台芸術学部', kind: 'study', source: 'attendance' }
+      ], [acting]),
+      teacher('T1012', '一般担当（架空）', [
+        { uni: '架空星空大学', fac: '理学部', kind: 'study', source: 'attendance' }
+      ]),
+      teacher('T1013', '分野担当（架空）', [
+        { uni: '架空星空', fac: '舞台芸術学部', kind: 'admissions', source: 'application' }
+      ])
+    ];
+    localStorage.setItem(KEY, JSON.stringify(data));
+  });
+  await page.reload();
+  await login(page, 'S1001');
+  await enterIdentity(page);
+  await page.click('#nav-next');
+  await page.locator('#purpose-choices button').first().click();
+  await page.click('#nav-next');
+  for (const [id, text] of [['uni', '架空星空大学'], ['fac', '舞台芸術学部']]) {
+    await page.uncheck('#student-uni-' + id + '-undecided');
+    await page.fill('#student-uni-' + id, text);
+  }
+  await page.click('#nav-next');
+  await page.fill('#student-free-topics', 'Acting');
+  await page.click('#nav-next');
+  const cards = page.locator('#match-results article');
+  const first = cards.filter({ hasText: '実技担当（架空）' });
+  const overview = first.locator('.recommendation-overview');
+  const summary = await overview.innerText();
+  assert.match(summary, /相談できる内容.*入試・出願相談/s);
+  assert.match(summary, /希望条件との一致.*架空星空大学.*演技/s);
+  assert.match(summary, /登録されている知識・経験.*合格者を指導した経験.*専門分野の実務経験/s);
+  assert.match(summary, /照合した登録で未登録の項目.*学部・学群.*対応の有無が分からない/s);
+  assert.doesNotMatch(summary, /自身が在学・卒業した経験|学科・専攻/);
+
+  const detailed = first.locator('.recommendation-details');
+  assert.equal(await detailed.locator('.reasons').isVisible(), false);
+  await detailed.getByText('詳しい推薦理由').click();
+  assert.match(await detailed.locator('.reasons').innerText(), /学部・学群：相談対応情報は未登録/);
+  assert.equal(await first.locator('details').last().locator('p').first().isVisible(), false);
+
+  const conflict = await cards.filter({ hasText: '一般担当（架空）' }).locator('.recommendation-overview').innerText();
+  assert.match(conflict, /相談前に確認したいこと.*異なる登録/s);
+  assert.match(conflict, /知識・経験の詳細は、照合した登録から確認できません/);
+  assert.doesNotMatch(conflict, /照合した登録で未登録の項目|自身が在学・卒業した経験/);
+
+  const partial = await cards.filter({ hasText: '分野担当（架空）' }).locator('.recommendation-overview').innerText();
+  assert.match(partial, /名称が部分一致/);
+  assert.doesNotMatch(partial, /自身が大学を受験した経験/);
+
+  await page.click('#lang-en');
+  assert.match(await first.locator('.recommendation-overview').innerText(), /Listed consultation topics.*Guidance of successful applicants/s);
+}));
