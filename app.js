@@ -86,7 +86,8 @@ recommendationGapNote:['未登録の項目は、経験や対応の有無が分�
 recommendationPartial:['名称が部分一致しています。対象の大学・学部・学科は先生に確認してください。','Some names match partially. Confirm the institution or program with the teacher.'],
 recommendationDifferent:['対象の大学・学部・学科に異なる登録があります。詳しい推薦理由で確認できます。','A registered institution or program differs. See the detailed reasons.'],
 recommendationMissingSource:['大学の相談対応を支える知識・経験の根拠','Basis for university guidance'],
-recommendationMore:['ほか{count}件','{count} more'],
+recommendationShow:['表示','Show'],
+recommendationClose:['閉じる','Close'],
 recommendationScopeTopic:['専門分野','Subject'],
 recommendationScopeCareer:['職業','Career'],
 recommendationScopeQualification:['資格・検定の相談','Qualification guidance'],
@@ -262,7 +263,7 @@ function recommendationPlaceState(states,field){
  return outsideScope&&['exact','partial'].includes(state)?'outOfScope':state;
 }
 
-function recommendationOverview(result){
+function recommendationContent(result){
  const {record,states,wide}=result.uni;
  const scope=[],matches=[],evidence=[],missing=[],checks=[];
  const stateList=recommendationPlaceFields.map(([field,label])=>[field,label,recommendationPlaceState(states,field)]);
@@ -295,15 +296,17 @@ function recommendationOverview(result){
   if(item.practical)evidence.push(t('careerPractice')+'：'+label);
  }
 
+ return {scope,matches,evidence,missing,checks};
+}
+
+function renderRecommendationOverview({scope,matches,evidence,missing,checks}){
  const overview=node('dl','recommendation-overview');
  const add=(heading,items,fallback)=>{
   if(!items.length&&!fallback)return;
   const row=node('div','recommendation-row');
   row.append(node('dt','',t(heading)));
   const isMissing=heading==='recommendationGaps';
-  const shown=isMissing?items:items.slice(0,2);
-  if(items.length>shown.length)shown.push(t('recommendationMore').replace('{count}',items.length-shown.length));
-  const description=node('dd','',shown.length?shown.join(lang==='ja'?' ／ ':' · '):t(fallback));
+  const description=node('dd','',items.length?items.join(lang==='ja'?' ／ ':' · '):t(fallback));
   if(isMissing)description.append(node('span','recommendation-note',t('recommendationGapNote')));
   row.append(description);
   overview.append(row);
@@ -367,16 +370,34 @@ function renderResults(){
   const badge=result.uni.score?(result.uni.all?'matchedAll':'partialUni'):'relatedOnly';
   header.append(node('h3','',lang==='en'&&teach.nameEn?teach.nameEn:teach.name));
   header.append(node('span','pill '+(result.uni.all&&result.uni.score?'good':''),t(badge)));
-  card.append(header,recommendationOverview(result));
-  const reasons=node('details','recommendation-details');
-  reasons.append(node('summary','',t('recommendationDetails')),renderRecommendationReasons(result));
+  card.append(header);
+  if(teach.intro||teach.introEn){
+   card.append(node('p','recommendation-intro',lang==='en'?(teach.introEn||teach.intro):(teach.intro||teach.introEn)));
+  }
+  const content=recommendationContent(result);
+  if(content.scope.length)card.append(node('p','recommendation-brief',content.scope[0]));
+  const reasons=node('div','recommendation-details');
+  const controls=node('div','recommendation-controls');
+  const heading=node('span','',t('recommendationDetails'));
+  const panel=node('div','recommendation-panel');
+  heading.id='recommendation-heading-'+teach.id;
+  panel.id='recommendation-panel-'+teach.id;
+  panel.hidden=true;
+  panel.append(renderRecommendationOverview(content),renderRecommendationReasons(result));
+  const toggle=addBtn(t('recommendationShow'),()=>{
+   panel.hidden=!panel.hidden;
+   toggle.setAttribute('aria-expanded',String(!panel.hidden));
+   toggle.textContent=t(panel.hidden?'recommendationShow':'recommendationClose');
+  });
+  toggle.setAttribute('aria-expanded','false');
+  toggle.setAttribute('aria-controls',panel.id);
+  toggle.setAttribute('aria-describedby',heading.id);
+  controls.append(heading,toggle);
+  reasons.append(controls,panel);
   card.append(reasons);
 
   const details=node('details');
   details.append(node('summary','',t('recommendationProfile')));
-  if(teach.intro||teach.introEn){
-   details.append(node('p','',lang==='en'?(teach.introEn||teach.intro):(teach.intro||teach.introEn)));
-  }
   const topics=(teach.topicIds||[]).map(id=>findTopic(id)).filter(Boolean).map(topicLabel);
   const roles=(teach.careerIds||[]).map(id=>findCareer(id)).filter(Boolean).map(careerLabel);
   details.append(node('p','',t('topicSelectTitle')+'：'+(topics.join('、')||t('none'))));
