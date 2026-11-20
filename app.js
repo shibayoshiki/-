@@ -422,7 +422,7 @@ function renderResults(){
     weekOffset=0;
     renderResults();
     if(openedSchedule)$('schedule-for-'+teach.id)?.scrollIntoView({behavior:'smooth',block:'nearest'});
-   }));
+   },'btn secondary teacher-schedule-button'));
   }else actions.append(addBtn(t('teacherMessage'),()=>prepareTeams(teach)));
   card.append(actions);
   if(EDITION==='B'&&openedSchedule===teach.id){
