@@ -380,3 +380,55 @@ for (const path of ['/', '/b.html']) {
     assert.match(await first.locator('.recommendation-overview').innerText(), /Listed consultation topics.*Guidance of successful applicants/s);
   }));
 }
+
+test('A版・B版でクラス単位の利用許可、発行IDでのログイン、再発行の防止', () => withPage(async page => {
+  for (const path of ['/', '/b.html']) {
+    await page.goto(baseUrl + path);
+    const storageKey = await page.evaluate(() => KEY);
+    await login(page, 'A1001');
+    const grant = page.getByRole('button', { name: 'このクラスを一括で許可' });
+    const group = page.getByLabel('対象クラス');
+    const preview = page.locator('#admin-group-preview');
+    const issued = page.locator('#admin-group-ids');
+    assert.equal(await grant.isDisabled(), true);
+
+    await page.click('#admin-create-student');
+    assert.match(await page.locator('#admin-student-msg').innerText(), /S1003/);
+    await group.selectOption('class1a');
+    assert.match(await preview.innerText(), /対象は5人/);
+    assert.equal(await grant.isEnabled(), true);
+    assert.equal(await issued.innerText(), '');
+    await setWriteFailure(page, storageKey);
+    await grant.click();
+    assert.match(await page.locator('#admin-group-status').innerText(), /保存できませんでした/);
+    assert.match(await preview.innerText(), /対象は5人/);
+    assert.equal(await grant.isEnabled(), true);
+    assert.equal(await issued.innerText(), '');
+
+    await setWriteFailure(page, null);
+    await grant.click();
+    assert.match(await preview.innerText(), /5人分の利用を許可済み/);
+    assert.equal(await grant.isDisabled(), true);
+    const firstIds = (await issued.innerText()).match(/S\d+/g);
+    assert.deepEqual(firstIds, ['S1004', 'S1005', 'S1006', 'S1007', 'S1008']);
+
+    await page.reload();
+    await page.click('#home-open');
+    await group.selectOption('class1a');
+    assert.deepEqual((await issued.innerText()).match(/S\d+/g), firstIds);
+    assert.equal(await grant.isDisabled(), true);
+    await group.selectOption('class1b');
+    assert.match(await preview.innerText(), /対象は8人/);
+    await grant.click();
+    assert.match(await preview.innerText(), /8人分の利用を許可済み/);
+    const secondIds = (await issued.innerText()).match(/S\d+/g);
+    assert.equal(secondIds.length, 8);
+    assert.equal(new Set([...firstIds, ...secondIds]).size, 13);
+
+    await page.click('#logout');
+    await login(page, firstIds[0]);
+    assert.equal(await page.locator('#step-1').isVisible(), true);
+    assert.equal(await page.inputValue('#student-name'), '');
+    await page.click('#logout');
+  }
+}));

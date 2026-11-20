@@ -55,7 +55,19 @@ const RAW_CAREERS=[
 ['自然・環境','Science & Environment','研究者','Research scientist'],['自然・環境','Science & Environment','農業従事者','Agricultural professional'],['自然・環境','Science & Environment','環境コンサルタント','Environmental consultant'],
 ['スポーツ','Sports','スポーツ指導者','Sports coach'],['スポーツ','Sports','スポーツトレーナー','Athletic trainer'] ];
 const QUALIFICATIONS=[['英語検定','English proficiency certification'],['TOEIC','TOEIC'],['簿記','Bookkeeping certification'],['基本情報技術者試験','Fundamental Information Technology Engineer'],['ITパスポート','IT Passport'],['色彩検定','Color certification'],['インテリアコーディネーター','Interior coordinator qualification'],['建築士','Architect license'],['保育士資格','Childcare qualification'],['看護師免許','Nursing license'],['教員免許','Teaching license'],['統計検定','Statistics certification']];
+const DEMO_STUDENT_GROUPS=[
+ {id:'class1a',ja:'高校1年A組（架空）',en:'Grade 10, Class A (fictional)',count:5},
+ {id:'class1b',ja:'高校1年B組（架空）',en:'Grade 10, Class B (fictional)',count:8}
+];
 const DICT={
+groupAccessTitle:['生徒の一括利用許可（デモ）','Grant student access to a class (demo)'],
+groupAccessIntro:['架空のクラスを選ぶと、生徒全員分のデモIDをまとめて作成できます。','Select a fictional class to issue demo IDs for its students in one step.'],
+groupAccessClass:['対象クラス','Class'],
+groupAccessGrant:['このクラスを一括で許可','Grant access to this class'],
+groupAccessPending:['対象は{count}人です。許可すると、各生徒のデモIDが発行されます。','This class has {count} students. Granting access will issue a demo ID for each student.'],
+groupAccessGranted:['{count}人分の利用を許可済みです。','Access has been granted to {count} students.'],
+groupAccessIds:['発行済みの生徒ID','Issued student IDs'],
+
 universityIntent:['進学相談で重視する内容','Priority for university guidance'],
 admissionsIntent:['入試・出願','Admissions and applications'],
 campusIntent:['授業・大学生活','Academics and campus life'],
@@ -523,7 +535,7 @@ function addCatalogItem(){
  fillCategories($('teacher-category'));
  renderCheckboxList('topic','teacher');
 }
-function renderAdmin(){const host=$('admin-deletions');host.replaceChildren();for(const req of db.deletionRequests){const x=[...db.categories,...db.subcategories,...db.customItems].find(s=>s.id===req.itemId);if(!x)continue;const div=node('div','university-entry');div.append(node('strong','',lang==='ja'?x.ja:x.en||x.ja));div.append(node('p','small',req.requester));div.append(addBtn(t('approve'),()=>resolveDeletion(req.id,true)));div.append(document.createTextNode(' '));div.append(addBtn(t('reject'),()=>resolveDeletion(req.id,false),'btn ghost sm'));host.append(div)}if(!host.children.length)host.append(node('p','small',t('emptyList')));$('admin-counts').textContent=`${t('studentGroup')}: ${db.studentIds.length} / ${t('teacherGroup')}: ${db.teachers.length} / ${t('topicTotal')}: ${allTopics().length} / ${t('catalogCategory')}: ${allCategories().length}`}
+function renderAdmin(){renderStudentGroup();const host=$('admin-deletions');host.replaceChildren();for(const req of db.deletionRequests){const x=[...db.categories,...db.subcategories,...db.customItems].find(s=>s.id===req.itemId);if(!x)continue;const div=node('div','university-entry');div.append(node('strong','',lang==='ja'?x.ja:x.en||x.ja));div.append(node('p','small',req.requester));div.append(addBtn(t('approve'),()=>resolveDeletion(req.id,true)));div.append(document.createTextNode(' '));div.append(addBtn(t('reject'),()=>resolveDeletion(req.id,false),'btn ghost sm'));host.append(div)}if(!host.children.length)host.append(node('p','small',t('emptyList')));$('admin-counts').textContent=`${t('studentGroup')}: ${db.studentIds.length} / ${t('teacherGroup')}: ${db.teachers.length} / ${t('topicTotal')}: ${allTopics().length} / ${t('catalogCategory')}: ${allCategories().length}`}
 function resolveDeletion(requestId,approve){
  let removedTopics=new Set();
  const saved=updateDb(data=>{
@@ -577,16 +589,61 @@ function cleanSavedStudentTopics(removedTopics){
  }
  return complete;
 }
+function renderStudentGroup(){
+ const select=$('admin-student-group');
+ const group=DEMO_STUDENT_GROUPS.find(item=>item.id===select.value);
+ opt(select,DEMO_STUDENT_GROUPS.map(item=>({value:item.id,label:lang==='ja'?item.ja:item.en})),
+  t('selectAtLeast'),group?.id||'');
+ const ids=group?db.studentGroupIds?.[group.id]:null;
+ $('admin-group-preview').textContent=group
+  ? t(ids?'groupAccessGranted':'groupAccessPending').replace('{count}',ids?.length??group.count)
+  : '';
+ $('admin-grant-group').disabled=!group||Boolean(ids);
+ $('admin-group-ids').textContent=ids?t('groupAccessIds')+'：'+ids.join(' / '):'';
+}
+
+function allocateAccountIds(prefix,existingIds,count){
+ const used=new Set(existingIds);
+ const ids=[];
+ for(let n=1001;ids.length<count;n++){
+  const id=prefix+n;
+  if(!used.has(id))ids.push(id);
+ }
+ return ids;
+}
+
+function grantStudentGroup(){
+ if(session?.role!=='admin')return;
+ const group=DEMO_STUDENT_GROUPS.find(item=>item.id===$('admin-student-group').value);
+ if(!group)return;
+ let alreadyGranted=false;
+ const saved=updateDb(data=>{
+  data.studentGroupIds??={};
+  if(data.studentGroupIds[group.id]){
+   alreadyGranted=true;
+   return false;
+  }
+  const ids=allocateAccountIds('S',data.studentIds,group.count);
+  data.studentIds.push(...ids);
+  data.studentGroupIds[group.id]=ids;
+ });
+ if(alreadyGranted){
+  db=loadDb();
+  renderAdmin();
+  return;
+ }
+ if(showSaveResult('admin-group-status',saved))renderAdmin();
+}
+
 function createAccount(kind){
  const isTeacher=kind==='teacher',statusId=isTeacher?'admin-teacher-msg':'admin-student-msg';
  const name=isTeacher?clean($('admin-teacher-name').value):'';
  if(isTeacher&&!name){setStatus(statusId,t('needLabel'),true);return}
  let id;
  const saved=updateDb(data=>{
-  const used=new Set(isTeacher?data.teachers.map(x=>x.id):data.studentIds),prefix=isTeacher?'T':'S';
-  let n=1001;
-  while(used.has(prefix+n))n++;
-  id=prefix+n;
+  [id]=isTeacher
+   ? allocateAccountIds('T',data.teachers.map(x=>x.id),1)
+   : allocateAccountIds('S',data.studentIds,1);
   if(isTeacher)data.teachers.push({id,name,nameEn:'',purposes:['university'],topicIds:[],careerIds:[],freeTopics:'',freeCareers:'',intro:'',introEn:'',publicNote:'',academic:[],support:[]});
   else data.studentIds.push(id);
  });
@@ -596,5 +653,5 @@ function createAccount(kind){
  renderAdmin();
 }
 function setLanguage(v){if(active==='teacher'&&teacherDraft){teacherDraft.name=$('teacher-name').value;teacherDraft.nameEn=$('teacher-name-en').value;teacherDraft.intro=$('teacher-about').value;teacherDraft.publicNote=$('teacher-public').value;teacherDraft.freeTopics=$('teacher-free-topics').value;teacherDraft.freeCareers=$('teacher-free-careers').value}if(active==='student'&&step===1){student.name=$('student-name').value;student.grade=$('student-grade').value;student.klass=$('student-class').value}if(active==='student'&&step===2.5){for(const k of ['uni','fac','dep'])student.uni[k]=$('student-uni-'+k+'-undecided').checked?'':$('student-uni-'+k).value}if(v!==lang){lang=v;try{localStorage.setItem(LKEY,v)}catch(e){}}fillStatic();if(session){renderHome();if(active==='student'){fillStudentIdentity();renderStep()}if(active==='teacher')renderTeacher();if(active==='admin')renderAdmin();}else view('login')}
-function initialize(){try{lang=localStorage.getItem(LKEY)==='en'?'en':'ja'}catch(e){}fillStatic();$('lang-ja').onclick=()=>setLanguage('ja');$('lang-en').onclick=()=>setLanguage('en');$('do-login').onclick=()=>login($('login-id').value);$('login-id').onkeydown=e=>{if(e.key==='Enter')login($('login-id').value)};document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{$('login-id').value=b.dataset.demo;$('login-id').focus()});$('logout').onclick=logout;$('home-open').onclick=enterMain;$('nav-home').onclick=()=>{renderHome();view('home')};$('nav-back').onclick=()=>active==='student'?backStudent():view('home');$('nav-next').onclick=()=>active==='home'?enterMain():active==='student'?nextStudent():null;$('redo-search').onclick=()=>{step=3;renderStep()};$('teams-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('teams-text').value);setStatus('copy-msg',t('copyDone'))}catch(e){$('teams-text').select();try{if(document.execCommand('copy'))setStatus('copy-msg',t('copyDone'));else setStatus('copy-msg',t('copyManual'),true)}catch(e){setStatus('copy-msg',t('copyManual'),true)}}};for(const who of ['student','teacher']){for(const kind of ['topic','career']){const q=$(who+'-'+kind+'-query'),cat=$(who+'-'+(kind==='topic'?'category':'career-cat'));q.oninput=()=>renderCheckboxList(kind,who);cat.onchange=()=>renderCheckboxList(kind,who)} }for(const key of ['topics','careers'])$('student-free-'+key).oninput=e=>{student['free'+(key[0].toUpperCase()+key.slice(1))]=e.target.value;saveStudent('student-search-status')};$('teacher-save').onclick=()=>commitTeacher();$('history-add').onclick=addHistory;$('support-add').onclick=addSupport;$('catalog-kind').onchange=renderCatalogAdds;$('catalog-parent').onchange=renderCatalogAdds;$('catalog-add').onclick=addCatalogItem;$('admin-create-teacher').onclick=()=>createAccount('teacher');$('admin-create-student').onclick=()=>createAccount('student');try{const sid=sessionStorage.getItem(SKEY);if(sid){const role=db.studentIds.includes(sid)?'student':db.teachers.some(x=>x.id===sid)?'teacher':sid==='A1001'?'admin':null;if(role){session={id:sid,role};renderHome();view('home');return}}}catch(e){}view('login')}
+function initialize(){try{lang=localStorage.getItem(LKEY)==='en'?'en':'ja'}catch(e){}fillStatic();$('lang-ja').onclick=()=>setLanguage('ja');$('lang-en').onclick=()=>setLanguage('en');$('do-login').onclick=()=>login($('login-id').value);$('login-id').onkeydown=e=>{if(e.key==='Enter')login($('login-id').value)};document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{$('login-id').value=b.dataset.demo;$('login-id').focus()});$('logout').onclick=logout;$('home-open').onclick=enterMain;$('nav-home').onclick=()=>{renderHome();view('home')};$('nav-back').onclick=()=>active==='student'?backStudent():view('home');$('nav-next').onclick=()=>active==='home'?enterMain():active==='student'?nextStudent():null;$('redo-search').onclick=()=>{step=3;renderStep()};$('teams-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('teams-text').value);setStatus('copy-msg',t('copyDone'))}catch(e){$('teams-text').select();try{if(document.execCommand('copy'))setStatus('copy-msg',t('copyDone'));else setStatus('copy-msg',t('copyManual'),true)}catch(e){setStatus('copy-msg',t('copyManual'),true)}}};for(const who of ['student','teacher']){for(const kind of ['topic','career']){const q=$(who+'-'+kind+'-query'),cat=$(who+'-'+(kind==='topic'?'category':'career-cat'));q.oninput=()=>renderCheckboxList(kind,who);cat.onchange=()=>renderCheckboxList(kind,who)} }for(const key of ['topics','careers'])$('student-free-'+key).oninput=e=>{student['free'+(key[0].toUpperCase()+key.slice(1))]=e.target.value;saveStudent('student-search-status')};$('teacher-save').onclick=()=>commitTeacher();$('history-add').onclick=addHistory;$('support-add').onclick=addSupport;$('catalog-kind').onchange=renderCatalogAdds;$('catalog-parent').onchange=renderCatalogAdds;$('catalog-add').onclick=addCatalogItem;$('admin-create-teacher').onclick=()=>createAccount('teacher');$('admin-create-student').onclick=()=>createAccount('student');$('admin-student-group').onchange=()=>{setStatus('admin-group-status','');renderStudentGroup()};$('admin-grant-group').onclick=grantStudentGroup;try{const sid=sessionStorage.getItem(SKEY);if(sid){const role=db.studentIds.includes(sid)?'student':db.teachers.some(x=>x.id===sid)?'teacher':sid==='A1001'?'admin':null;if(role){session={id:sid,role};renderHome();view('home');return}}}catch(e){}view('login')}
 initialize();
