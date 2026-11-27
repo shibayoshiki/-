@@ -60,6 +60,21 @@ const DEMO_STUDENT_GROUPS=[
  {id:'class1b',ja:'高校1年B組（架空）',en:'Grade 10, Class B (fictional)',count:8}
 ];
 const DICT={
+editEntry:['編集','Edit'],
+saveEntryEdit:['変更を保存','Save changes'],
+cancelEntryEdit:['編集を取り消す','Cancel editing'],
+copyGroupIds:['生徒IDをまとめてコピー','Copy all student IDs'],
+
+relatedTitle:['こちらの先生もおすすめです','Other teachers to consider'],
+relatedIntro:['登録された別の分野や経験から、進路を考える視点を広げられる先生です。','These teachers’ listed areas and experiences may offer another perspective on your plans.'],
+relatedEmpty:['関連性の根拠を確認できる先生は見つかりませんでした。','No other teachers with a confirmed connection were found.'],
+relatedBadge:['関連分野・経験から紹介','Related area or experience'],
+relatedQuery:['関連する希望条件','Related to your search'],
+relatedEvidence:['先生が登録した相談分野・経験','Listed area or experience'],
+relatedWhy:['紹介する理由','Why this teacher is suggested'],
+interviewTitle:['面接練習をしたい方へ','If you want to practice interviewing'],
+interviewAdvice:['学校の案内に沿いながら、複数の先生から異なる視点のアドバイスを受けることもおすすめです。','Follow your school’s guidance and consider asking several teachers for different perspectives.'],
+
 groupAccessTitle:['生徒の一括利用許可（デモ）','Grant student access to a class (demo)'],
 groupAccessIntro:['架空のクラスを選ぶと、生徒全員分のデモIDをまとめて作成できます。','Select a fictional class to issue demo IDs for its students in one step.'],
 groupAccessClass:['対象クラス','Class'],
@@ -196,10 +211,10 @@ function roleText(role){return t(role==='student'?'studentGroup':role==='teacher
 function view(page){if(page!=='login'&&!session)return;active=page;document.querySelectorAll('section.screen').forEach(el=>el.classList.toggle('active',el.id===page));show('session-strip',!!session);show('bottom-nav',!!session&&page!=='login');document.body.classList.toggle('with-nav',!!session&&page!=='login');$('session-label').textContent=session?roleText(session.role)+' / '+session.id+' ('+t('testOnly')+')':'';refreshNav();window.scrollTo(0,0)}
 function refreshNav(){const back=$('nav-back'),next=$('nav-next');back.disabled=active==='home'||active==='login';next.disabled=active==='login'||active==='teacher'||active==='admin'||(active==='student'&&step===4);next.textContent=active==='student'&&step===3?t('searchTeachers'):t('next')}
 function renderHome(){if(!session)return;const p=session.role;const key=p==='student'?'student':p==='teacher'?'teacher':'admin';$('home-title').textContent=t(key+'Home');$('home-desc').textContent=t(key+'HomeDesc');$('home-open').textContent=t(p==='student'?'startStudent':p==='teacher'?'openTeacher':'openAdmin');$('home-about').textContent=t(p==='student'?'studentAbout':p==='teacher'?'teacherAboutText':'adminAbout');}
-function enterMain(){if(!session)return;db=loadDb();if(session.role==='student'){enterStudent();return}if(session.role==='teacher'){teacherDraft=deep(db.teachers.find(x=>x.id===session.id)||db.teachers[0]);renderTeacher();view('teacher');return}renderAdmin();view('admin')}
+function enterMain(){if(!session)return;db=loadDb();if(session.role==='student'){enterStudent();return}if(session.role==='teacher'){if(!Object.keys(teacherEntryEdits).length)teacherDraft=deep(db.teachers.find(x=>x.id===session.id)||db.teachers[0]);renderTeacher();view('teacher');return}renderAdmin();view('admin')}
 function enterStudent(){openedSchedule=null;selectedTime=null;weekOffset=0;student=loadStudent();if(student.year!==academicYear()){student.grade='';student.klass='';show('new-year-msg',true)}else show('new-year-msg',false);fillStudentIdentity();step=1;renderStep();view('student')}
 function login(id){const x=clean(id).toUpperCase();let role='';if(db.studentIds.includes(x))role='student';else if(db.teachers.some(u=>u.id===x))role='teacher';else if(x==='A1001')role='admin';if(!role){setStatus('login-msg',t('unknownId'),true);return}session={id:x,role};try{sessionStorage.setItem(SKEY,x)}catch(e){}setStatus('login-msg','');renderHome();view('home')}
-function logout(){session=null;teacherDraft=null;try{sessionStorage.removeItem(SKEY)}catch(e){}view('login')}
+function logout(){if(session?.role==='teacher')resetTeacherEntryForms();session=null;teacherDraft=null;try{sessionStorage.removeItem(SKEY)}catch(e){}view('login')}
 function fillStudentIdentity(){$('student-name').value=student.name;$('student-class').value=student.klass;opt($('student-grade'),['中学1年','中学2年','中学3年','高校1年','高校2年','高校3年'].map((x,i)=>({value:x,label:lang==='ja'?x:['Junior high 1','Junior high 2','Junior high 3','High school 1','High school 2','High school 3'][i]})),t('selectAtLeast'),student.grade)}
 function stages(){return student.purpose==='hsjob'?[1,2,3]:[1,2,2.5,3]}
 function renderStep(){const stagesNow=stages(),labels={1:t('basic'),2:t('purpose'),2.5:t('university'),3:t('interests')};for(const n of [1,2,2.5,3,4])$('step-'+(n===2.5?'uni':n)).classList.toggle('active',step===n);const prog=$('progress');prog.replaceChildren();stagesNow.forEach((n,i)=>{const s=node('span','bar'+(i<=stagesNow.indexOf(step)||step===4?' on':''));prog.append(s)});prog.append(node('span','label',step===4?t('resultsTitle'):(stagesNow.indexOf(step)+1)+' / '+stagesNow.length+' '+labels[step]));for(const n of stagesNow){const el=$('step-label-'+(n===2.5?'uni':n));if(el)el.textContent=t('step')+' '+(stagesNow.indexOf(n)+1)+' / '+stagesNow.length}if(step===2)renderPurposes();if(step===2.5)renderStudentUni();if(step===3){renderStudentSearch();}if(step===4)renderResults();refreshNav();window.scrollTo(0,0)}
@@ -371,10 +386,8 @@ function renderResults(){
   ...lines(student.freeTopics),...lines(student.freeCareers)
  ];
  $('match-summary').textContent=t('currentSearch')+'：'+(conditions.join(' / ')||t('none'))+' · '+t('sortInfo');
- if(!results.length){
-  host.append(node('div','empty',t('noHits')));
-  return;
- }
+ if(!results.length)host.append(node('div','empty',t('noHits')));
+ renderRelatedResults(results);
  for(const result of results){
   const teach=result.teacher;
   const card=node('article','teacher-result');
@@ -408,6 +421,40 @@ function renderResults(){
   reasons.append(controls,panel);
   card.append(reasons);
 
+  card.append(renderResultProfile(teach));
+  appendConsultationActions(card,teach);
+  host.append(card);
+ }
+}
+
+function renderRelatedResults(direct){
+ const host=$('related-results');
+ host.replaceChildren();
+ const related=RelatedTeachers.pick(student,db.teachers,allTopics(),careers,direct.map(result=>result.teacher.id));
+ if(!related.length)host.append(node('div','empty',t('relatedEmpty')));
+ for(const {teacher,reasons} of related){
+  const card=node('article','teacher-result');
+  const header=node('div','title-line');
+  header.append(node('h3','',lang==='en'&&teacher.nameEn?teacher.nameEn:teacher.name),node('span','pill',t('relatedBadge')));
+  card.append(header);
+  for(const {query,evidence,why} of reasons){
+   const fact=evidence.record
+    ? [evidence.record.uni,evidence.record.fac,evidence.record.dep].filter(Boolean).join(' / ')+'（'+
+      pairLabel(SUPPORT_KINDS,evidence.record.kind)+'・'+pairLabel(SOURCE_TYPES,evidence.record.source)+'）'
+    : t(evidence.type==='topic'?'recommendationScopeTopic':'recommendationScopeCareer')+'：'+(lang==='en'?evidence.en:evidence.ja);
+   const reason=node('dl','related-reason');
+   reason.append(node('dt','',t('relatedQuery')),node('dd','',lang==='en'?query.en:query.ja));
+   reason.append(node('dt','',t('relatedEvidence')),node('dd','',fact));
+   reason.append(node('dt','',t('relatedWhy')),node('dd','',why[lang==='en'?1:0]));
+   card.append(reason);
+  }
+  card.append(renderResultProfile(teacher));
+  appendConsultationActions(card,teacher);
+  host.append(card);
+ }
+}
+
+function renderResultProfile(teach){
   const details=node('details');
   details.append(node('summary','',t('recommendationProfile')));
   const topics=(teach.topicIds||[]).map(id=>findTopic(id)).filter(Boolean).map(topicLabel);
@@ -424,8 +471,11 @@ function renderResults(){
    details.append(node('p','',t('historyTag')+'：'+[rec.university,rec.major].filter(Boolean).join(' / ')+' ｜'+pairLabel(STUDY_TYPES,rec.type)));
   }
   if(teach.publicNote)details.append(node('p','',teach.publicNote));
-  card.append(details);
+  return details;
 
+}
+
+function appendConsultationActions(card,teach){
   const actions=node('div','row');
   if(EDITION==='B'){
    actions.append(addBtn(t('teacherScheduleBtn'),()=>{
@@ -443,9 +493,8 @@ function renderResults(){
    card.append(panel);
    renderSchedule(panel,teach.id,false);
   }
-  host.append(card);
- }
 }
+
 function localDate(d){return lang==='ja'?`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 const DAYS_JA=['日','月','火','水','木','金','土'],DAYS_EN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -501,13 +550,110 @@ function updateTeacherList(field,statusId,change,render){
  render();
  return true;
 }
-function renderHistory(){const host=$('history-list');host.replaceChildren();if(!teacherDraft.academic.length)host.append(node('p','small',t('emptyList')));teacherDraft.academic.forEach((a,i)=>{const div=node('div','university-entry');div.append(node('strong','',a.university+' / '+a.major));div.append(node('p','small',pairLabel(STUDY_TYPES,a.type)+(a.note?' · '+a.note:'')));div.append(addBtn(t('remove'),()=>{updateTeacherList('academic','history-msg',items=>items.splice(i,1),renderHistory)},'btn danger sm'));host.append(div)});opt($('history-type'),STUDY_TYPES.map(p=>({value:p[0],label:pairLabel(STUDY_TYPES,p[0])})),t('selectAtLeast'),$('history-type').value||'primary')}
-function addHistory(){const uni=clean($('history-university').value),major=clean($('history-major').value);if(!uni||!major){setStatus('history-msg',t('needHistory'),true);return}const entry={university:uni,major,type:$('history-type').value||'coursework',note:clean($('history-note').value)};if(!updateTeacherList('academic','history-msg',items=>items.push(entry),renderHistory))return;for(const id of ['history-university','history-major','history-note'])$(id).value=''}
-function renderTeacherSupport(){const host=$('teacher-uni-list');host.replaceChildren();if(!teacherDraft.support.length)host.append(node('p','small',t('emptyList')));teacherDraft.support.forEach((a,i)=>{const div=node('div','university-entry');div.append(node('strong','',[a.uni,a.fac,a.dep].filter(Boolean).join(' / ')));div.append(node('p','small',pairLabel(SUPPORT_KINDS,a.kind)+' · '+pairLabel(SOURCE_TYPES,a.source)+(a.scope==='university'?' · '+t('universityWideReason'):'')+(a.year?' · '+t('setYear')+' '+a.year:'')));div.append(addBtn(t('remove'),()=>{updateTeacherList('support','support-msg',items=>items.splice(i,1),renderTeacherSupport)},'btn danger sm'));host.append(div)});const oldk=$('support-kind').value,olds=$('support-source').value;opt($('support-kind'),SUPPORT_KINDS.map(x=>({value:x[0],label:pairLabel(SUPPORT_KINDS,x[0])})),t('selectAtLeast'),oldk||'admissions');opt($('support-source'),SOURCE_TYPES.map(x=>({value:x[0],label:pairLabel(SOURCE_TYPES,x[0])})),t('selectAtLeast'),olds||'guidance')}
-function addSupport(){const v={uni:clean($('support-uni').value),fac:clean($('support-fac').value),dep:clean($('support-dep').value),kind:$('support-kind').value,source:$('support-source').value,year:clean($('support-year').value)};if($('support-wide').checked){
- if(!v.uni||v.fac||v.dep){setStatus('support-msg',t('universityWideValidation'),true);return}
- v.scope='university';
-}if(!v.uni&&!v.fac&&!v.dep){setStatus('support-msg',t('needSupport'),true);return}if(!updateTeacherList('support','support-msg',items=>items.push(v),renderTeacherSupport))return;for(const id of ['support-uni','support-fac','support-dep','support-year'])$(id).value='';$('support-wide').checked=false}
+const teacherEntryForms={
+ history:{list:'academic',host:'history-list',fields:['university','major','type','note'],primary:'university',
+  selects:{type:[STUDY_TYPES,'primary']},
+  title:entry=>[entry.university,entry.major].join(' / '),
+  detail:entry=>[pairLabel(STUDY_TYPES,entry.type),entry.note].filter(Boolean).join(' · ')},
+ support:{list:'support',host:'teacher-uni-list',fields:['uni','fac','dep','kind','source','year','wide'],primary:'uni',
+  selects:{kind:[SUPPORT_KINDS,'admissions'],source:[SOURCE_TYPES,'guidance']},
+  title:entry=>[entry.uni,entry.fac,entry.dep].filter(Boolean).join(' / '),
+  detail:entry=>[pairLabel(SUPPORT_KINDS,entry.kind),pairLabel(SOURCE_TYPES,entry.source),
+   entry.scope==='university'?t('universityWideReason'):'',entry.year?t('setYear')+' '+entry.year:''].filter(Boolean).join(' · ')}
+};
+const teacherEntryEdits={};
+function readTeacherEntryFields(kind){
+ return Object.fromEntries(teacherEntryForms[kind].fields.map(field=>{
+  const control=$(kind+'-'+field);
+  return [field,field==='wide'?control.checked:control.value];
+ }));
+}
+function writeTeacherEntryFields(kind,values){
+ for(const field of teacherEntryForms[kind].fields){
+  const control=$(kind+'-'+field);
+  if(field==='wide')control.checked=Boolean(values.wide);
+  else control.value=values[field]??teacherEntryForms[kind].selects[field]?.[1]??'';
+ }
+}
+function resetTeacherEntryForms(){
+ for(const kind of Object.keys(teacherEntryForms)){
+  delete teacherEntryEdits[kind];
+  writeTeacherEntryFields(kind,{});
+  setStatus(kind+'-msg','');
+ }
+}
+function editTeacherEntry(kind,index,entry){
+ teacherEntryEdits[kind]={index,previous:readTeacherEntryFields(kind)};
+ const {primary}=teacherEntryForms[kind];
+ writeTeacherEntryFields(kind,{...entry,wide:entry.scope==='university'});
+ setStatus(kind+'-msg','');
+ renderTeacherEntries(kind);
+ $(kind+'-'+primary).focus();
+}
+function cancelTeacherEntryEdit(kind){
+ writeTeacherEntryFields(kind,teacherEntryEdits[kind].previous);
+ delete teacherEntryEdits[kind];
+ setStatus(kind+'-msg','');
+ renderTeacherEntries(kind);
+}
+function renderTeacherEntries(kind){
+ const form=teacherEntryForms[kind],edit=teacherEntryEdits[kind],host=$(form.host);
+ for(const [field,[choices,initial]] of Object.entries(form.selects)){
+  const select=$(kind+'-'+field);
+  opt(select,choices.map(item=>({value:item[0],label:pairLabel(choices,item[0])})),
+   t('selectAtLeast'),edit?select.value:select.value||initial);
+ }
+ $(kind+'-add').textContent=t(edit?'saveEntryEdit':'addButton');
+ show(kind+'-cancel',!!edit);
+ host.replaceChildren();
+ const entries=teacherDraft[form.list];
+ if(!entries.length)host.append(node('p','small',t('emptyList')));
+ entries.forEach((entry,index)=>{
+  const div=node('div','university-entry');
+  div.append(node('strong','',form.title(entry)),node('p','small',form.detail(entry)));
+  const row=node('div','row');
+  const editButton=addBtn(t('editEntry'),()=>editTeacherEntry(kind,index,entry));
+  const removeButton=addBtn(t('remove'),()=>{
+   updateTeacherList(form.list,kind+'-msg',items=>items.splice(index,1),()=>renderTeacherEntries(kind));
+  },'btn danger sm');
+  editButton.disabled=removeButton.disabled=!!edit;
+  row.append(editButton,removeButton);
+  div.append(row);
+  host.append(div);
+ });
+}
+function renderHistory(){renderTeacherEntries('history')}
+function renderTeacherSupport(){renderTeacherEntries('support')}
+
+function saveTeacherEntry(kind,entry){
+ const edit=teacherEntryEdits[kind],{list}=teacherEntryForms[kind];
+ const saved=updateTeacherList(list,kind+'-msg',items=>{
+  if(edit)items[edit.index]={...items[edit.index],...entry};
+  else items.push(entry);
+ },()=>{
+  delete teacherEntryEdits[kind];
+  const {selects}=teacherEntryForms[kind];
+  const current=readTeacherEntryFields(kind);
+  const selected=Object.fromEntries(Object.keys(selects).map(field=>[field,current[field]]));
+  writeTeacherEntryFields(kind,edit?edit.previous:selected);
+  renderTeacherEntries(kind);
+ });
+ return saved;
+}
+function addHistory(){
+ const fields=readTeacherEntryFields('history');
+ const university=clean(fields.university),major=clean(fields.major);
+ if(!university||!major){setStatus('history-msg',t('needHistory'),true);return}
+ saveTeacherEntry('history',{university,major,type:fields.type||'coursework',note:clean(fields.note)});
+}
+function addSupport(){
+ const fields=readTeacherEntryFields('support');
+ const {wide,kind,source}=fields;
+ const [uni,fac,dep,year]=[fields.uni,fields.fac,fields.dep,fields.year].map(clean);
+ if(wide&&(!uni||fac||dep)){setStatus('support-msg',t('universityWideValidation'),true);return}
+ if(!uni&&!fac&&!dep){setStatus('support-msg',t('needSupport'),true);return}
+ saveTeacherEntry('support',{uni,fac,dep,kind,source,year,scope:wide?'university':undefined});
+}
 function renderCatalogAdds(){const kind=$('catalog-kind').value||'topic',oldp=$('catalog-parent').value;opt($('catalog-kind'),[['category','catalogCategory'],['subcategory','catalogSubcategory'],['topic','catalogTopic'],['qualification','catalogQualification']].map(([id,k])=>({value:id,label:t(k)})),t('selectAtLeast'),kind);opt($('catalog-parent'),allCategories().map(c=>({value:c.id,label:catLabel(c.id)})),t('selectAtLeast'),oldp);const p=$('catalog-parent').value,oldsub=$('catalog-sub').value;opt($('catalog-sub'),db.subcategories.filter(s=>s.category===p).map(s=>({value:s.id,label:lang==='ja'?s.ja:s.en||s.ja})),t('selectAtLeast'),oldsub);show('catalog-add-category-box',kind!=='category');show('catalog-add-sub-box',kind==='topic');const host=$('my-additions');host.replaceChildren();for(const x of [...db.categories,...db.subcategories,...db.customItems].filter(x=>x.createdBy===session.id)){const div=node('div','row');div.style.margin='7px 0';div.append(node('span','small',(lang==='ja'?x.ja:x.en||x.ja)+' · '+t(x.kind==='category'?'catalogCategory':x.kind==='subcategory'?'catalogSubcategory':x.kind==='qualification'?'catalogQualification':'catalogTopic')));const requested=db.deletionRequests.some(r=>r.itemId===x.id);const btn=addBtn(t(requested?'requested':'requestDelete'),()=>{const saved=updateDb(data=>{
  const item=[...data.categories,...data.subcategories,...data.customItems].find(item=>item.id===x.id);
  if(item?.createdBy!==session.id||data.deletionRequests.some(r=>r.itemId===x.id))return false;
@@ -600,6 +746,21 @@ function renderStudentGroup(){
   : '';
  $('admin-grant-group').disabled=!group||Boolean(ids);
  $('admin-group-ids').textContent=ids?t('groupAccessIds')+'：'+ids.join(' / '):'';
+ show('admin-copy-group',!!ids);
+}
+
+async function copyStudentGroupIds(){
+ if(session?.role!=='admin')return;
+ const group=$('admin-student-group').value,ids=db.studentGroupIds?.[group];
+ if(!ids?.length)return;
+ let copied=false;
+ try{
+  await navigator.clipboard.writeText(ids.join('\n'));
+  copied=true;
+ }catch(e){}
+ if(session?.role==='admin'&&$('admin-student-group').value===group){
+  setStatus('admin-group-status',t(copied?'copyDone':'copyManual'),!copied);
+ }
 }
 
 function allocateAccountIds(prefix,existingIds,count){
@@ -653,5 +814,5 @@ function createAccount(kind){
  renderAdmin();
 }
 function setLanguage(v){if(active==='teacher'&&teacherDraft){teacherDraft.name=$('teacher-name').value;teacherDraft.nameEn=$('teacher-name-en').value;teacherDraft.intro=$('teacher-about').value;teacherDraft.publicNote=$('teacher-public').value;teacherDraft.freeTopics=$('teacher-free-topics').value;teacherDraft.freeCareers=$('teacher-free-careers').value}if(active==='student'&&step===1){student.name=$('student-name').value;student.grade=$('student-grade').value;student.klass=$('student-class').value}if(active==='student'&&step===2.5){for(const k of ['uni','fac','dep'])student.uni[k]=$('student-uni-'+k+'-undecided').checked?'':$('student-uni-'+k).value}if(v!==lang){lang=v;try{localStorage.setItem(LKEY,v)}catch(e){}}fillStatic();if(session){renderHome();if(active==='student'){fillStudentIdentity();renderStep()}if(active==='teacher')renderTeacher();if(active==='admin')renderAdmin();}else view('login')}
-function initialize(){try{lang=localStorage.getItem(LKEY)==='en'?'en':'ja'}catch(e){}fillStatic();$('lang-ja').onclick=()=>setLanguage('ja');$('lang-en').onclick=()=>setLanguage('en');$('do-login').onclick=()=>login($('login-id').value);$('login-id').onkeydown=e=>{if(e.key==='Enter')login($('login-id').value)};document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{$('login-id').value=b.dataset.demo;$('login-id').focus()});$('logout').onclick=logout;$('home-open').onclick=enterMain;$('nav-home').onclick=()=>{renderHome();view('home')};$('nav-back').onclick=()=>active==='student'?backStudent():view('home');$('nav-next').onclick=()=>active==='home'?enterMain():active==='student'?nextStudent():null;$('redo-search').onclick=()=>{step=3;renderStep()};$('teams-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('teams-text').value);setStatus('copy-msg',t('copyDone'))}catch(e){$('teams-text').select();try{if(document.execCommand('copy'))setStatus('copy-msg',t('copyDone'));else setStatus('copy-msg',t('copyManual'),true)}catch(e){setStatus('copy-msg',t('copyManual'),true)}}};for(const who of ['student','teacher']){for(const kind of ['topic','career']){const q=$(who+'-'+kind+'-query'),cat=$(who+'-'+(kind==='topic'?'category':'career-cat'));q.oninput=()=>renderCheckboxList(kind,who);cat.onchange=()=>renderCheckboxList(kind,who)} }for(const key of ['topics','careers'])$('student-free-'+key).oninput=e=>{student['free'+(key[0].toUpperCase()+key.slice(1))]=e.target.value;saveStudent('student-search-status')};$('teacher-save').onclick=()=>commitTeacher();$('history-add').onclick=addHistory;$('support-add').onclick=addSupport;$('catalog-kind').onchange=renderCatalogAdds;$('catalog-parent').onchange=renderCatalogAdds;$('catalog-add').onclick=addCatalogItem;$('admin-create-teacher').onclick=()=>createAccount('teacher');$('admin-create-student').onclick=()=>createAccount('student');$('admin-student-group').onchange=()=>{setStatus('admin-group-status','');renderStudentGroup()};$('admin-grant-group').onclick=grantStudentGroup;try{const sid=sessionStorage.getItem(SKEY);if(sid){const role=db.studentIds.includes(sid)?'student':db.teachers.some(x=>x.id===sid)?'teacher':sid==='A1001'?'admin':null;if(role){session={id:sid,role};renderHome();view('home');return}}}catch(e){}view('login')}
+function initialize(){try{lang=localStorage.getItem(LKEY)==='en'?'en':'ja'}catch(e){}fillStatic();$('lang-ja').onclick=()=>setLanguage('ja');$('lang-en').onclick=()=>setLanguage('en');$('do-login').onclick=()=>login($('login-id').value);$('login-id').onkeydown=e=>{if(e.key==='Enter')login($('login-id').value)};document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{$('login-id').value=b.dataset.demo;$('login-id').focus()});$('logout').onclick=logout;$('home-open').onclick=enterMain;$('nav-home').onclick=()=>{renderHome();view('home')};$('nav-back').onclick=()=>active==='student'?backStudent():view('home');$('nav-next').onclick=()=>active==='home'?enterMain():active==='student'?nextStudent():null;$('redo-search').onclick=()=>{step=3;renderStep()};$('teams-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('teams-text').value);setStatus('copy-msg',t('copyDone'))}catch(e){$('teams-text').select();try{if(document.execCommand('copy'))setStatus('copy-msg',t('copyDone'));else setStatus('copy-msg',t('copyManual'),true)}catch(e){setStatus('copy-msg',t('copyManual'),true)}}};for(const who of ['student','teacher']){for(const kind of ['topic','career']){const q=$(who+'-'+kind+'-query'),cat=$(who+'-'+(kind==='topic'?'category':'career-cat'));q.oninput=()=>renderCheckboxList(kind,who);cat.onchange=()=>renderCheckboxList(kind,who)} }for(const key of ['topics','careers'])$('student-free-'+key).oninput=e=>{student['free'+(key[0].toUpperCase()+key.slice(1))]=e.target.value;saveStudent('student-search-status')};$('teacher-save').onclick=()=>commitTeacher();$('history-add').onclick=addHistory;$('support-add').onclick=addSupport;for(const kind of Object.keys(teacherEntryForms))$(kind+'-cancel').onclick=()=>cancelTeacherEntryEdit(kind);$('catalog-kind').onchange=renderCatalogAdds;$('catalog-parent').onchange=renderCatalogAdds;$('catalog-add').onclick=addCatalogItem;$('admin-create-teacher').onclick=()=>createAccount('teacher');$('admin-create-student').onclick=()=>createAccount('student');$('admin-student-group').onchange=()=>{setStatus('admin-group-status','');renderStudentGroup()};$('admin-grant-group').onclick=grantStudentGroup;$('admin-copy-group').onclick=copyStudentGroupIds;try{const sid=sessionStorage.getItem(SKEY);if(sid){const role=db.studentIds.includes(sid)?'student':db.teachers.some(x=>x.id===sid)?'teacher':sid==='A1001'?'admin':null;if(role){session={id:sid,role};renderHome();view('home');return}}}catch(e){}view('login')}
 initialize();
