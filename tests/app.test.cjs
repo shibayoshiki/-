@@ -10,7 +10,8 @@ before(async () => {
     '/': ['index.html', 'text/html'],
     '/b.html': ['b.html', 'text/html'],
     '/app.js': ['app.js', 'text/javascript'],
-    '/matching.js': ['matching.js', 'text/javascript']
+    '/matching.js': ['matching.js', 'text/javascript'],
+    '/related-teachers.js': ['related-teachers.js', 'text/javascript']
   };
   server = createServer((request, response) => {
     const asset = assets[request.url];
@@ -411,6 +412,8 @@ test('A版・B版でクラス単位の利用許可、発行IDでのログイン�
     assert.equal(await grant.isDisabled(), true);
     const firstIds = (await issued.innerText()).match(/S\d+/g);
     assert.deepEqual(firstIds, ['S1004', 'S1005', 'S1006', 'S1007', 'S1008']);
+    await page.getByRole('button', {name:'生徒IDをまとめてコピー'}).click();
+    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), firstIds.join('\n'));
 
     await page.reload();
     await page.click('#home-open');
@@ -431,4 +434,93 @@ test('A版・B版でクラス単位の利用許可、発行IDでのログイン�
     assert.equal(await page.inputValue('#student-name'), '');
     await page.click('#logout');
   }
+}));
+
+test('A版・B版で通常結果と関連教員が別枠になり、既存の相談操作を利用できる', () => withPage(async page => {
+  for (const [path,width] of [['/',390],['/b.html',1280]]) {
+    await page.setViewportSize({ width, height:844 });
+    await page.goto(baseUrl + path);
+    await login(page, 'S1001');
+    await enterIdentity(page);
+    await page.click('#nav-next');
+    await page.locator('#purpose-choices button').first().click();
+    await page.click('#nav-next');
+    await page.uncheck('#student-uni-fac-undecided');
+    await page.fill('#student-uni-fac','経済学部');
+    await page.click('#nav-next');
+    await page.click('#nav-next');
+
+    const direct=page.locator('#match-results article h3');
+    const pickup=page.locator('#related-results article');
+    assert.deepEqual(await direct.allTextContents(),['経済担当A先生（架空）']);
+    assert.deepEqual(await pickup.locator('h3').allTextContents(),['情報担当D先生（架空）']);
+    assert.match(await pickup.locator('.related-reason').innerText(),/経済学部.*専門分野：統計学/s);
+    assert.doesNotMatch(await pickup.locator('.related-reason').innerText(),/経済学部.*完全一致/s);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth),width);
+    const otherWidth=width===390?1280:390;
+    await page.setViewportSize({width:otherWidth,height:844});
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth),otherWidth);
+    assert.equal(await page.locator('#admin-student-groups').isVisible(),false);
+    await page.getByText('面接練習をしたい方へ',{exact:true}).click();
+    assert.equal(await page.getByText(/複数の先生から異なる視点/).isVisible(),true);
+
+    if(path==='/'){
+      await pickup.getByRole('button',{name:'Teams用の申込文を作る'}).click();
+      assert.match(await page.inputValue('#teams-text'),/情報担当D先生/);
+    }else{
+      await pickup.getByRole('button',{name:'この先生の予定表を見る'}).click();
+      await pickup.getByRole('button',{name:/次の週/}).click();
+      await pickup.locator('.calendar button:enabled').first().click();
+      await pickup.getByRole('button',{name:'この日時でTeams文面を作成'}).click();
+      assert.match(await page.inputValue('#teams-text'),/情報担当D先生[\s\S]*希望日時/);
+    }
+
+    await page.click('#redo-search');
+    await page.click('#nav-back');
+    await page.fill('#student-uni-fac','架空・拾わない学部');
+    await page.click('#nav-next');
+    await page.click('#nav-next');
+    assert.equal(await pickup.count(),0);
+    assert.match(await page.locator('#related-results').innerText(),/根拠を確認できる先生は見つかりませんでした/);
+
+    await page.click('#logout');
+    await login(page,'S1001');
+    assert.equal(await page.inputValue('#student-name'),'架空 生徒');
+    await page.click('#logout');
+  }
+}));
+
+test('教員の学習歴・相談対応を削除せず編集し、入力中の追加内容を保持する', () => withPage(async page => {
+  await page.goto(baseUrl);
+  await login(page,'T1001');
+  await page.fill('#history-university','架空の追加途中の大学');
+  await page.locator('#history-list').getByRole('button',{name:'編集',exact:true}).first().click();
+  assert.equal(await page.inputValue('#history-university'),'架空大学');
+  await page.fill('#history-major','架空の変更後の専攻');
+  await page.click('#history-add');
+  assert.match(await page.locator('#history-list').innerText(),/架空の変更後の専攻/);
+  assert.equal(await page.inputValue('#history-university'),'架空の追加途中の大学');
+  assert.equal(await page.locator('#history-list .university-entry').count(),1);
+
+  await page.locator('#teacher-uni-list').getByRole('button',{name:'編集',exact:true}).first().click();
+  await page.fill('#support-year','2024');
+  await page.click('#support-cancel');
+  assert.equal(await page.inputValue('#support-year'),'');
+  assert.doesNotMatch(await page.locator('#teacher-uni-list').innerText(),/2024/);
+
+  await page.locator('#teacher-uni-list').getByRole('button',{name:'編集',exact:true}).first().click();
+  await page.fill('#support-fac','架空の変更後の学部');
+  await setWriteFailure(page,await page.evaluate(() => KEY));
+  await page.click('#support-add');
+  assert.match(await page.locator('#support-msg').innerText(),/保存できませんでした/);
+  assert.equal(await page.inputValue('#support-fac'),'架空の変更後の学部');
+  assert.doesNotMatch(await page.locator('#teacher-uni-list').innerText(),/架空の変更後の学部/);
+  await setWriteFailure(page,null);
+  await page.click('#support-add');
+
+  await page.reload();
+  await page.click('#home-open');
+  assert.match(await page.locator('#teacher-uni-list').innerText(),/架空の変更後の学部/);
+  assert.equal(await page.locator('#teacher-uni-list .university-entry').count(),1);
+  assert.match(await page.locator('#history-list').innerText(),/架空の変更後の専攻/);
 }));
